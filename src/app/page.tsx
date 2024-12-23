@@ -1,5 +1,4 @@
 import { CameraColumn } from '@/components/column';
-import VideoAnalysisApp from '@/components/VideoAnalysisApp';
 
 export default function Home() {
   return (

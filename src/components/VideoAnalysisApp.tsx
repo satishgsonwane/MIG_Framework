@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 "use client" 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Square, Play, Pause, Settings } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Square, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,13 +12,13 @@ interface VideoAnalysisProps {
   onAnalysisComplete?: (data: any) => void;
 }
 
-const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) => {
+const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({  }) => {
   // State management
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeTab, setActiveTab] = useState('raw');
   const [roi, setRoi] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [isSelectingRoi, setIsSelectingRoi] = useState(false);
-  const [error, setError] = useState('');
+  const [, setError] = useState('');
 
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -41,6 +43,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
         };
       }
     } catch (err) {
+      console.error(err);
       setError('Unable to access camera. Please check permissions.');
     }
   };

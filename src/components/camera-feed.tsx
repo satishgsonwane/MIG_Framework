@@ -8,7 +8,7 @@ import { Button } from './ui/button'
 export function CameraFeed() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [isStreamActive, setIsStreamActive] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
+  const [, setError] = useState<string>('')
   const [showControls, setShowControls] = useState<boolean>(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
