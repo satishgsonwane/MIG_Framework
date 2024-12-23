@@ -12,7 +12,12 @@ interface VideoAnalysisProps {
 }
 
 const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) => {
-  // States
+  // States for camera devices
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCamera1, setSelectedCamera1] = useState<string>("default");
+  const [selectedCamera2, setSelectedCamera2] = useState<string>("default");
+  
+  // Existing states
   const [isStreaming, setIsStreaming] = useState(false);
   const [isStream2Active, setIsStream2Active] = useState(false);
   const [isSelectingRoi1, setIsSelectingRoi1] = useState(false);
@@ -29,14 +34,59 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
   const roiStartRef = useRef<{ x: number; y: number } | null>(null);
+  // Get available cameras
+// Get available cameras
+useEffect(() => {
+  const getCameras = async () => {
+    try {
+      // First request camera permission
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      
+      // Then enumerate devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      
+      console.log('Available cameras:', videoDevices); // Debug log
+      
+      setCameras(videoDevices);
+      
+      // Set default cameras if available
+      if (videoDevices.length > 0 && videoDevices[0].deviceId) {
+        setSelectedCamera1(videoDevices[0].deviceId);
+      }
+      if (videoDevices.length > 1 && videoDevices[1].deviceId) {
+        setSelectedCamera2(videoDevices[1].deviceId);
+      }
+    } catch (err) {
+      console.error('Error getting cameras:', err);
+      setError('Failed to get camera devices. Please check permissions.');
+    }
+  };
+
+  getCameras();
+
+  // Add listener for device changes
+  navigator.mediaDevices.addEventListener('devicechange', getCameras);
+
+  // Cleanup
+  return () => {
+    navigator.mediaDevices.removeEventListener('devicechange', getCameras);
+  };
+}, []);
 
   // Stream control functions
   const startStream = async () => {
+    if (!selectedCamera1 || selectedCamera1 === "default") {
+      setError('Please select a camera first');
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          width: { ideal: 960 },
-          height: { ideal: 540 }
+          deviceId: selectedCamera1,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
         } 
       });
       
@@ -49,14 +99,20 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       setIsStreaming(true);
       setError('');
     } catch (err) {
-      setError('Unable to access camera. Please check permissions.');
+      setError('Unable to access first camera. Please check permissions.');
     }
   };
 
   const startStream2 = async () => {
+    if (!selectedCamera2 || selectedCamera2 === "default") {
+      setError('Please select a camera first');
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
+          deviceId: selectedCamera2,
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         } 
@@ -91,7 +147,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       setIsStream2Active(false);
     }
   };
-
   // ROI handlers
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
     if (!(isFirst ? isSelectingRoi1 : isSelectingRoi2)) return;
@@ -145,8 +200,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
     if (videoRef.current && canvasRef.current && isStreaming) {
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
-        canvasRef.current.width = 960;
-        canvasRef.current.height = 540;
+        canvasRef.current.width = 1920;
+        canvasRef.current.height = 1080;
         ctx.drawImage(videoRef.current, 0, 0);
         if (roi1.width && roi1.height) {
           ctx.strokeStyle = '#0284c7';
@@ -160,8 +215,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
     if (video2Ref.current && canvas2Ref.current && isStream2Active) {
       const ctx = canvas2Ref.current.getContext('2d');
       if (ctx) {
-        canvas2Ref.current.width = 960;
-        canvas2Ref.current.height = 540;
+        canvas2Ref.current.width = 1920;
+        canvas2Ref.current.height = 1080;
         ctx.drawImage(video2Ref.current, 0, 0);
         if (roi2.width && roi2.height) {
           ctx.strokeStyle = '#0284c7';
@@ -176,7 +231,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       setAnimationFrame(frameId);
     }
   };
-
   useEffect(() => {
     if (isStreaming || isStream2Active) {
       const frameId = requestAnimationFrame(processFrame);
@@ -206,7 +260,28 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="flex justify-between items-center">
-                <span>Camera Feed 1</span>
+                <div className="flex items-center gap-4">
+                  <span>Camera Feed 1</span>
+                  <Select 
+                    value={selectedCamera1 || "default"} 
+                    onValueChange={setSelectedCamera1}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Select camera" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default" disabled>Select a camera</SelectItem>
+                      {cameras.map((camera) => (
+                        <SelectItem 
+                          key={camera.deviceId} 
+                          value={camera.deviceId || `camera-${Math.random()}`}
+                        >
+                          {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex gap-1">
                   <Button 
                     variant="outline" 
@@ -245,33 +320,32 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
             </CardContent>
           </Card>
 
-          {/* Joint Type Selector */}
-          <div className="flex justify-center">
-            <Card className="w-48">
-              <CardHeader className="p-1">
-                <CardTitle className="text-sm text-center">Joint Type</CardTitle>
-              </CardHeader>
-              <CardContent className="p-1">
-                <Select value={jointType} onValueChange={setJointType}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="type1">Type 1</SelectItem>
-                    <SelectItem value="type2">Type 2</SelectItem>
-                    <SelectItem value="type3">Type 3</SelectItem>
-                    <SelectItem value="type4">Type 4</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Second Video Feed */}
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="flex justify-between items-center">
-                <span>Camera Feed 2</span>
+                <div className="flex items-center gap-4">
+                  <span>Camera Feed 2</span>
+                  <Select 
+                    value={selectedCamera2 || "default"} 
+                    onValueChange={setSelectedCamera2}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Select camera" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default" disabled>Select a camera</SelectItem>
+                      {cameras.map((camera) => (
+                        <SelectItem 
+                          key={camera.deviceId} 
+                          value={camera.deviceId || `camera-${Math.random()}`}
+                        >
+                          {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex gap-1">
                   <Button 
                     variant="outline" 
@@ -291,7 +365,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="relative aspect-video">
+              <div className="relative aspect-video max-w-md mx-auto">
                 <video
                   ref={video2Ref}
                   autoPlay
@@ -310,7 +384,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
             </CardContent>
           </Card>
         </div>
-
         {/* Right Column - Analysis Outputs */}
         <div className="grid grid-rows-2 gap-4">
           <div className="grid grid-cols-2 gap-4">
