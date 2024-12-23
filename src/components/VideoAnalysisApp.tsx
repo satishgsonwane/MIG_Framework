@@ -4,12 +4,26 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Square, Play, Pause } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
 
 interface VideoAnalysisProps {
   onAnalysisComplete?: (data: any) => void;
 }
+
+interface JointType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+const jointTypes: JointType[] = [
+  { id: 'butt', name: 'Butt Joint', description: 'End to end joint connection' },
+  { id: 'lap', name: 'Lap Joint', description: 'Overlapping joint connection' },
+  { id: 'tee', name: 'T Joint', description: 'Perpendicular joint connection' },
+  { id: 'corner', name: 'Corner Joint', description: '90-degree angle joint' },
+];
 
 const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) => {
   // States for camera devices
@@ -17,15 +31,20 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const [selectedCamera1, setSelectedCamera1] = useState<string>("default");
   const [selectedCamera2, setSelectedCamera2] = useState<string>("default");
   
-  // Existing states
+  // Stream states
   const [isStreaming, setIsStreaming] = useState(false);
   const [isStream2Active, setIsStream2Active] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // ROI states
   const [isSelectingRoi1, setIsSelectingRoi1] = useState(false);
   const [isSelectingRoi2, setIsSelectingRoi2] = useState(false);
   const [roi1, setRoi1] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [roi2, setRoi2] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  
+  // Other states
   const [error, setError] = useState('');
-  const [jointType, setJointType] = useState('type1');
+  const [jointType, setJointType] = useState(jointTypes[0].id);
   const [animationFrame, setAnimationFrame] = useState<number | null>(null);
 
   // Refs
@@ -34,45 +53,36 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
   const roiStartRef = useRef<{ x: number; y: number } | null>(null);
-  // Get available cameras
-// Get available cameras
-useEffect(() => {
-  const getCameras = async () => {
-    try {
-      // First request camera permission
-      await navigator.mediaDevices.getUserMedia({ video: true });
-      
-      // Then enumerate devices
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      
-      console.log('Available cameras:', videoDevices); // Debug log
-      
-      setCameras(videoDevices);
-      
-      // Set default cameras if available
-      if (videoDevices.length > 0 && videoDevices[0].deviceId) {
-        setSelectedCamera1(videoDevices[0].deviceId);
+
+  // Camera detection
+  useEffect(() => {
+    const getCameras = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        console.log('Available cameras:', videoDevices);
+        setCameras(videoDevices);
+        
+        if (videoDevices.length > 0 && videoDevices[0].deviceId) {
+          setSelectedCamera1(videoDevices[0].deviceId);
+        }
+        if (videoDevices.length > 1 && videoDevices[1].deviceId) {
+          setSelectedCamera2(videoDevices[1].deviceId);
+        }
+      } catch (err) {
+        console.error('Error getting cameras:', err);
+        setError('Failed to get camera devices. Please check permissions.');
       }
-      if (videoDevices.length > 1 && videoDevices[1].deviceId) {
-        setSelectedCamera2(videoDevices[1].deviceId);
-      }
-    } catch (err) {
-      console.error('Error getting cameras:', err);
-      setError('Failed to get camera devices. Please check permissions.');
-    }
-  };
+    };
 
-  getCameras();
-
-  // Add listener for device changes
-  navigator.mediaDevices.addEventListener('devicechange', getCameras);
-
-  // Cleanup
-  return () => {
-    navigator.mediaDevices.removeEventListener('devicechange', getCameras);
-  };
-}, []);
+    getCameras();
+    navigator.mediaDevices.addEventListener('devicechange', getCameras);
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', getCameras);
+    };
+  }, []);
 
   // Stream control functions
   const startStream = async () => {
@@ -81,6 +91,7 @@ useEffect(() => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -100,6 +111,8 @@ useEffect(() => {
       setError('');
     } catch (err) {
       setError('Unable to access first camera. Please check permissions.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,6 +122,7 @@ useEffect(() => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -127,6 +141,8 @@ useEffect(() => {
       setIsStream2Active(true);
     } catch (err) {
       setError('Unable to access second camera.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -147,6 +163,7 @@ useEffect(() => {
       setIsStream2Active(false);
     }
   };
+
   // ROI handlers
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
     if (!(isFirst ? isSelectingRoi1 : isSelectingRoi2)) return;
@@ -200,9 +217,19 @@ useEffect(() => {
     if (videoRef.current && canvasRef.current && isStreaming) {
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
-        canvasRef.current.width = 1920;
-        canvasRef.current.height = 1080;
-        ctx.drawImage(videoRef.current, 0, 0);
+        const scale = Math.min(
+          canvasRef.current.width / videoRef.current.videoWidth,
+          canvasRef.current.height / videoRef.current.videoHeight
+        );
+        const x = (canvasRef.current.width - videoRef.current.videoWidth * scale) / 2;
+        const y = (canvasRef.current.height - videoRef.current.videoHeight * scale) / 2;
+
+        ctx.drawImage(
+          videoRef.current,
+          x, y,
+          videoRef.current.videoWidth * scale,
+          videoRef.current.videoHeight * scale
+        );
         if (roi1.width && roi1.height) {
           ctx.strokeStyle = '#0284c7';
           ctx.lineWidth = 2;
@@ -215,9 +242,19 @@ useEffect(() => {
     if (video2Ref.current && canvas2Ref.current && isStream2Active) {
       const ctx = canvas2Ref.current.getContext('2d');
       if (ctx) {
-        canvas2Ref.current.width = 1920;
-        canvas2Ref.current.height = 1080;
-        ctx.drawImage(video2Ref.current, 0, 0);
+        const scale = Math.min(
+          canvas2Ref.current.width / video2Ref.current.videoWidth,
+          canvas2Ref.current.height / video2Ref.current.videoHeight
+        );
+        const x = (canvas2Ref.current.width - video2Ref.current.videoWidth * scale) / 2;
+        const y = (canvas2Ref.current.height - video2Ref.current.videoHeight * scale) / 2;
+
+        ctx.drawImage(
+          video2Ref.current,
+          x, y,
+          video2Ref.current.videoWidth * scale,
+          video2Ref.current.videoHeight * scale
+        );
         if (roi2.width && roi2.height) {
           ctx.strokeStyle = '#0284c7';
           ctx.lineWidth = 2;
@@ -231,6 +268,8 @@ useEffect(() => {
       setAnimationFrame(frameId);
     }
   };
+
+  // Animation frame effect
   useEffect(() => {
     if (isStreaming || isStream2Active) {
       const frameId = requestAnimationFrame(processFrame);
@@ -244,11 +283,32 @@ useEffect(() => {
     };
   }, [isStreaming, isStream2Active]);
 
+  // Cleanup effect
   useEffect(() => {
-    return () => {
+    const cleanup = () => {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+        navigator.mediaDevices.enumerateDevices()
+          .then(devices => {
+            devices.forEach(device => {
+              if (device.kind === 'videoinput') {
+                navigator.mediaDevices.getUserMedia({
+                  video: { deviceId: { exact: device.deviceId } }
+                })
+                .then(stream => {
+                  stream.getTracks().forEach(track => track.stop());
+                })
+                .catch(() => {});
+              }
+            });
+          })
+          .catch(() => {});
+      }
       stopStream();
       stopStream2();
     };
+
+    cleanup();
+    return () => cleanup();
   }, []);
 
   return (
@@ -274,7 +334,7 @@ useEffect(() => {
                       {cameras.map((camera) => (
                         <SelectItem 
                           key={camera.deviceId} 
-                          value={camera.deviceId || `camera-${Math.random()}`}
+                          value={camera.deviceId}
                         >
                           {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
                         </SelectItem>
@@ -294,8 +354,15 @@ useEffect(() => {
                     variant="outline"
                     size="icon"
                     onClick={isStreaming ? stopStream : startStream}
+                    disabled={isLoading}
                   >
-                    {isStreaming ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    {isLoading ? (
+                      <Spinner className="h-4 w-4" />
+                    ) : isStreaming ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </CardTitle>
@@ -320,6 +387,37 @@ useEffect(() => {
             </CardContent>
           </Card>
 
+          {/* Joint Type Selector */}
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle>Joint Configuration</CardTitle>
+              <CardDescription>Select the type of joint for analysis</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Select value={jointType} onValueChange={setJointType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select joint type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jointTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm text-muted-foreground">
+                    Selected: <span className="font-medium capitalize">
+                      {jointTypes.find(t => t.id === jointType)?.name || jointType}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Second Video Feed */}
           <Card>
             <CardHeader className="p-4">
@@ -338,7 +436,7 @@ useEffect(() => {
                       {cameras.map((camera) => (
                         <SelectItem 
                           key={camera.deviceId} 
-                          value={camera.deviceId || `camera-${Math.random()}`}
+                          value={camera.deviceId}
                         >
                           {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
                         </SelectItem>
@@ -358,8 +456,15 @@ useEffect(() => {
                     variant="outline"
                     size="icon"
                     onClick={isStream2Active ? stopStream2 : startStream2}
+                    disabled={isLoading}
                   >
-                    {isStream2Active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    {isLoading ? (
+                      <Spinner className="h-4 w-4" />
+                    ) : isStream2Active ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </CardTitle>
@@ -385,60 +490,59 @@ useEffect(() => {
           </Card>
         </div>
         {/* Right Column - Analysis Outputs */}
-        <div className="grid grid-rows-2 gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* ROI Output */}
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle>ROI Analysis</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="aspect-video bg-gray-100 rounded-lg max-w-md mx-auto"></div>
-              </CardContent>
-            </Card>
+      <div className="grid grid-rows-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          {/* ROI Output */}
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle>ROI Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="aspect-video bg-gray-100 rounded-lg max-w-md mx-auto"></div>
+            </CardContent>
+          </Card>
 
-            {/* Canny Output */}
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle>Canny Edge Detection</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="aspect-video bg-gray-100 rounded-lg"></div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Canny Output */}
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle>Canny Edge Detection</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="aspect-video bg-gray-100 rounded-lg"></div>
+            </CardContent>
+          </Card>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Joint Analysis */}
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle>Joint Analysis</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="aspect-video bg-gray-100 rounded-lg"></div>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-2 gap-4">
+          {/* Joint Analysis */}
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle>Joint Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="aspect-video bg-gray-100 rounded-lg"></div>
+            </CardContent>
+          </Card>
 
-            {/* LOWESS Output */}
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle>LOWESS Visualization</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="aspect-video bg-gray-100 rounded-lg"></div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* LOWESS Output */}
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle>LOWESS Visualization</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="aspect-video bg-gray-100 rounded-lg"></div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {error && (
-        <Alert variant="destructive" className="fixed bottom-4 right-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
     </div>
-  );
-};
 
+    {error && (
+      <Alert variant="destructive" className="fixed bottom-4 right-4">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )}
+  </div>
+);
+};
 export default VideoAnalysisApp;
