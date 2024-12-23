@@ -86,3 +86,13 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+video {
+  backface-visibility: hidden;
+}
+
+canvas {
+  backface-visibility: hidden;
+}
+
+
