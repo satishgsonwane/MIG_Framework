@@ -541,40 +541,40 @@ return (
       <div className="grid grid-cols-2 gap-4 h-[600px]">
         {/* ROI Output */}
         <Card className="flex flex-col h-64">
-          <CardHeader className="p-2">
+          <CardHeader className="p-4">
             <CardTitle className="text-sm">ROI Analysis</CardTitle>
           </CardHeader>
-          <CardContent className="p-2 flex-1">
+          <CardContent className="p-1 flex-1">
             <div className="h-full bg-gray-100 rounded-lg"></div>
           </CardContent>
         </Card>
 
         {/* Canny Output */}
         <Card className="flex flex-col h-64">
-          <CardHeader className="p-2">
+          <CardHeader className="p-4">
             <CardTitle className="text-sm">Canny Edge Detection</CardTitle>
           </CardHeader>
-          <CardContent className="p-2 flex-1">
+          <CardContent className="p-1 flex-1">
             <div className="h-full bg-gray-100 rounded-lg"></div>
           </CardContent>
         </Card>
 
         {/* Joint Analysis */}
         <Card className="flex flex-col h-64">
-          <CardHeader className="p-2">
+          <CardHeader className="p-4">
             <CardTitle className="text-sm">Joint Analysis</CardTitle>
           </CardHeader>
-          <CardContent className="p-2 flex-1">
+          <CardContent className="p-1 flex-1">
             <div className="h-full bg-gray-100 rounded-lg"></div>
           </CardContent>
         </Card>
 
         {/* LOWESS Output */}
         <Card className="flex flex-col h-64">
-          <CardHeader className="p-2">
+          <CardHeader className="p-4">
             <CardTitle className="text-sm">LOWESS Visualization</CardTitle>
           </CardHeader>
-          <CardContent className="p-2 flex-1">
+          <CardContent className="p-1 flex-1">
             <div className="h-full bg-gray-100 rounded-lg"></div>
           </CardContent>
         </Card>
