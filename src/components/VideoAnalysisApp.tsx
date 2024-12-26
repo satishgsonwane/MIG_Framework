@@ -426,7 +426,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   }, []);
   return (
     <div className="min-h-screen bg-red-50 p-4">
-      <div className="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+      <div className="grid grid-cols-3 gap-4 mx-auto">
         {/* Left Column */}
         <div className="space-y-8">
           {/* First Video Feed */}
@@ -648,6 +648,10 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               </div>
             </CardContent>
           </Card>
+        </div>
+        {/* Right Column - Analysis Outputs */}
+        <div className="grid grid-cols-2 gap-4">
+
   
           {/* ROI Output */}
           <Card className="flex flex-col h-64">
@@ -701,6 +705,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
             </CardContent>
           </Card>
         </div>
+
       </div>
   
       {error && (
