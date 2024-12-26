@@ -415,21 +415,21 @@ return (
           </CardHeader>
           <CardContent className="p-4">
             <div className="relative aspect-video max-w-md mx-auto">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 w-full h-full object-cover bg-gray-100"
-              style={{ objectFit: 'cover' }}
-            />
-            <canvas
-              ref={canvasRef}
-              className="absolute inset-0 w-full h-full object-cover"
-              onMouseDown={(e) => handleCanvasMouseDown(e, true)}
-              onMouseMove={(e) => handleCanvasMouseMove(e, true)}
-              onMouseUp={() => handleCanvasMouseUp(true)}
-            />
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover bg-gray-100"
+                style={{ objectFit: 'cover' }}
+              />
+              <canvas
+                ref={canvasRef}
+                className="absolute inset-0 w-full h-full object-cover"
+                onMouseDown={(e) => handleCanvasMouseDown(e, true)}
+                onMouseMove={(e) => handleCanvasMouseMove(e, true)}
+                onMouseUp={() => handleCanvasMouseUp(true)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -464,7 +464,6 @@ return (
             </div>
           </CardContent>
         </Card>
-
         {/* Second Video Feed */}
         <Card>
           <CardHeader className="p-4">
@@ -518,70 +517,67 @@ return (
           </CardHeader>
           <CardContent className="p-4">
             <div className="relative aspect-video max-w-md mx-auto">
-            <video
-              ref={video2Ref}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 w-full h-full object-cover bg-gray-100"
-              style={{ objectFit: 'cover' }}
-            />
-            <canvas
-              ref={canvas2Ref}
-              className="absolute inset-0 w-full h-full object-cover"
-              onMouseDown={(e) => handleCanvasMouseDown(e, false)}
-              onMouseMove={(e) => handleCanvasMouseMove(e, false)}
-              onMouseUp={() => handleCanvasMouseUp(false)}
-            />
+              <video
+                ref={video2Ref}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover bg-gray-100"
+                style={{ objectFit: 'cover' }}
+              />
+              <canvas
+                ref={canvas2Ref}
+                className="absolute inset-0 w-full h-full object-cover"
+                onMouseDown={(e) => handleCanvasMouseDown(e, false)}
+                onMouseMove={(e) => handleCanvasMouseMove(e, false)}
+                onMouseUp={() => handleCanvasMouseUp(false)}
+              />
             </div>
           </CardContent>
         </Card>
       </div>
+
       {/* Right Column - Analysis Outputs */}
-      <div className="grid grid-rows-2 gap-4">
-        <div className="grid grid-cols-2 gap-4">
-          {/* ROI Output */}
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle>ROI Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="aspect-video bg-gray-100 rounded-lg max-w-md mx-auto"></div>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-2 gap-4">
+        {/* ROI Output */}
+        <Card className="flex flex-col">
+          <CardHeader className="p-4">
+            <CardTitle>ROI Analysis</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 flex-1">
+            <div className="h-full bg-gray-100 rounded-lg"></div>
+          </CardContent>
+        </Card>
 
-          {/* Canny Output */}
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle>Canny Edge Detection</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="aspect-video bg-gray-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Canny Output */}
+        <Card className="flex flex-col">
+          <CardHeader className="p-4">
+            <CardTitle>Canny Edge Detection</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 flex-1">
+            <div className="h-full bg-gray-100 rounded-lg"></div>
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-2 gap-4">
-          {/* Joint Analysis */}
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle>Joint Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="aspect-video bg-gray-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
+        {/* Joint Analysis */}
+        <Card className="flex flex-col">
+          <CardHeader className="p-4">
+            <CardTitle>Joint Analysis</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 flex-1">
+            <div className="h-full bg-gray-100 rounded-lg"></div>
+          </CardContent>
+        </Card>
 
-          {/* LOWESS Output */}
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle>LOWESS Visualization</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="aspect-video bg-gray-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* LOWESS Output */}
+        <Card className="flex flex-col">
+          <CardHeader className="p-4">
+            <CardTitle>LOWESS Visualization</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 flex-1">
+            <div className="h-full bg-gray-100 rounded-lg"></div>
+          </CardContent>
+        </Card>
       </div>
     </div>
 
@@ -593,5 +589,4 @@ return (
   </div>
 );
 };
-
 export default VideoAnalysisApp;
