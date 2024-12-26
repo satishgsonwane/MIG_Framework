@@ -513,12 +513,11 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
         <div className="grid grid-cols-2 gap-4 h-[600px]">
           {/* Joint Configuration */}
           <Card className="flex flex-col space-y-3 col-span-2">
-            <CardHeader className="p-2">
-              <CardTitle className="text-mm text-center">Joint Configuration</CardTitle>
-              <CardDescription>Select the type of joint for analysis</CardDescription>
-            </CardHeader>
             <CardContent className="p-2 flex-1">
+            <CardTitle className="text-mm text-center">Joint Configuration</CardTitle>
+            <CardDescription>Select the type of joint for analysis</CardDescription>
               <div className="grid grid-cols-2 gap-4">
+
                 <Select value={jointType} onValueChange={setJointType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select joint type" />
