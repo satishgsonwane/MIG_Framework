@@ -367,7 +367,7 @@ return (
           <CardHeader className="p-4">
             <CardTitle className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <span>Camera Feed 1</span>
+                <span>Depth Camera Feed</span>
                 <Select 
                   value={selectedCamera1 || "default"} 
                   onValueChange={setSelectedCamera1}
@@ -470,7 +470,7 @@ return (
           <CardHeader className="p-4">
             <CardTitle className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <span>Camera Feed 2</span>
+                <span>Weld Camera Feed</span>
                 <Select 
                   value={selectedCamera2 || "default"} 
                   onValueChange={setSelectedCamera2}
