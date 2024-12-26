@@ -372,7 +372,7 @@ return (
                   value={selectedCamera1 || "default"} 
                   onValueChange={setSelectedCamera1}
                 >
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-55">
                     <SelectValue placeholder="Select camera" />
                   </SelectTrigger>
                   <SelectContent>
@@ -420,7 +420,7 @@ return (
                 autoPlay
                 playsInline
                 muted
-                className="absolute inset-0 w-full h-full object-cover bg-gray-100"
+                className="absolute inset-0 w-full h-full object-cover bg-red-100"
                 style={{ objectFit: 'cover' }}
               />
               <canvas
@@ -522,7 +522,7 @@ return (
                 autoPlay
                 playsInline
                 muted
-                className="absolute inset-0 w-full h-full object-cover bg-gray-100"
+                className="absolute inset-0 w-full h-full object-cover bg-red-100"
                 style={{ objectFit: 'cover' }}
               />
               <canvas
@@ -538,14 +538,14 @@ return (
       </div>
 
       {/* Right Column - Analysis Outputs */}
-      <div className="grid grid-cols-2 gap-4 h-[600px]">
+      <div className="grid grid-cols-2 gap-4 h-[200px]">
         {/* ROI Output */}
         <Card className="flex flex-col h-64">
           <CardHeader className="p-4">
             <CardTitle className="text-sm">ROI Analysis</CardTitle>
           </CardHeader>
-          <CardContent className="p-1 flex-1">
-            <div className="h-full bg-gray-100 rounded-lg"></div>
+          <CardContent className="p-2 flex-1">
+            <div className="h-full bg-red-100 rounded-lg"></div>
           </CardContent>
         </Card>
 
@@ -554,8 +554,8 @@ return (
           <CardHeader className="p-4">
             <CardTitle className="text-sm">Canny Edge Detection</CardTitle>
           </CardHeader>
-          <CardContent className="p-1 flex-1">
-            <div className="h-full bg-gray-100 rounded-lg"></div>
+          <CardContent className="p-2 flex-1">
+            <div className="h-full bg-red-100 rounded-lg"></div>
           </CardContent>
         </Card>
 
@@ -564,8 +564,8 @@ return (
           <CardHeader className="p-4">
             <CardTitle className="text-sm">Joint Analysis</CardTitle>
           </CardHeader>
-          <CardContent className="p-1 flex-1">
-            <div className="h-full bg-gray-100 rounded-lg"></div>
+          <CardContent className="p-2 flex-1">
+            <div className="h-full bg-red-100 rounded-lg"></div>
           </CardContent>
         </Card>
 
@@ -574,8 +574,8 @@ return (
           <CardHeader className="p-4">
             <CardTitle className="text-sm">LOWESS Visualization</CardTitle>
           </CardHeader>
-          <CardContent className="p-1 flex-1">
-            <div className="h-full bg-gray-100 rounded-lg"></div>
+          <CardContent className="p-2 flex-1">
+            <div className="h-full bg-red-100 rounded-lg"></div>
           </CardContent>
         </Card>
       </div>
