@@ -354,37 +354,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       <div className="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
         {/* Left Column */}
         <div className="space-y-8">
-          {/* Joint Type Selector */}
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle>Joint Configuration</CardTitle>
-              <CardDescription>Select the type of joint for analysis</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Select value={jointType} onValueChange={setJointType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select joint type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jointTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex items-center justify-end">
-                  <span className="text-sm text-muted-foreground">
-                    Selected: <span className="font-medium capitalize">
-                      {jointTypes.find(t => t.id === jointType)?.name || jointType}
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-  
           {/* First Video Feed */}
           <Card>
             <CardHeader className="p-4">
@@ -395,7 +364,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                     value={selectedCamera1 || "default"} 
                     onValueChange={setSelectedCamera1}
                   >
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-55">
                       <SelectValue placeholder="Select camera" />
                     </SelectTrigger>
                     <SelectContent>
@@ -477,7 +446,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                     value={selectedCamera2 || "default"} 
                     onValueChange={setSelectedCamera2}
                   >
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-55">
                       <SelectValue placeholder="Select camera" />
                     </SelectTrigger>
                     <SelectContent>
@@ -542,9 +511,60 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   
         {/* Right Column - Analysis Outputs */}
         <div className="grid grid-cols-2 gap-4 h-[600px]">
+          {/* Joint Configuration */}
+          <Card className="flex flex-col space-y-3 col-span-2">
+            <CardHeader className="p-2">
+              <CardTitle className="text-mm text-center">Joint Configuration</CardTitle>
+              <CardDescription>Select the type of joint for analysis</CardDescription>
+            </CardHeader>
+            <CardContent className="p-2 flex-1">
+              <div className="grid grid-cols-2 gap-4">
+                <Select value={jointType} onValueChange={setJointType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select joint type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jointTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center justify-end">
+                  <span className="text-sm text-muted-foreground">
+                    Selected: <span className="font-medium capitalize">
+                      {jointTypes.find(t => t.id === jointType)?.name || jointType}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+  
+          {/* Joint Analysis */}
+          <Card className="flex flex-col h-64">
+            <CardHeader className="p-0 pt-3 px-2">
+              <CardTitle className="text-sm text-center">Joint Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 flex-1">
+              <div className="h-full bg-gray-100 rounded-lg"></div>
+            </CardContent>
+          </Card>
+  
+          {/* LOWESS Output */}
+          <Card className="flex flex-col h-64">
+            <CardHeader className="p-0 pt-3 px-2">
+              <CardTitle className="text-sm text-center">LOWESS Visualization</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 flex-1">
+              <div className="h-full bg-gray-100 rounded-lg"></div>
+            </CardContent>
+          </Card>
+  
           {/* ROI Output */}
           <Card className="flex flex-col h-64">
-            <CardHeader className="p-2">
+          <CardHeader className="p-0 pt-3 px-2">
               <CardTitle className="text-sm text-center">ROI Analysis</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
@@ -566,28 +586,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   
           {/* Canny Output */}
           <Card className="flex flex-col h-64">
-            <CardHeader className="p-2">
+          <CardHeader className="p-0 pt-3 px-2">
               <CardTitle className="text-sm text-center">Canny Edge Detection</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="h-full bg-gray-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-  
-          {/* Joint Analysis */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-2">
-              <CardTitle className="text-sm text-center">Joint Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="h-full bg-gray-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-  
-          {/* LOWESS Output */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-2">
-              <CardTitle className="text-sm text-center">LOWESS Visualization</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
               <div className="h-full bg-gray-100 rounded-lg"></div>
