@@ -18,6 +18,12 @@ interface JointType {
   description: string;
 }
 
+// Add to existing interfaces
+interface ROIAnalysis {
+  roi1Image: string | null;
+  roi2Image: string | null;
+}
+
 // Add these interfaces at the top with other interfaces
 interface ROI {
   x: number;
@@ -103,7 +109,6 @@ const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 
 
-
 const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) => {
   // Camera device states
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
@@ -132,6 +137,10 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const [jointType, setJointType] = useState(jointTypes[0].id);
   const [animationFrame, setAnimationFrame] = useState<number | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [roiAnalysis, setRoiAnalysis] = useState<ROIAnalysis>({
+    roi1Image: null,
+    roi2Image: null
+  });
   
   // Weld parameter states
   const [weldParams, setWeldParams] = useState<Record<string, string>>(() => 
@@ -175,6 +184,62 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
     };
   }, []);
 
+  const captureROI = (isFirst: boolean) => {
+    const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
+    const video = isFirst ? videoRef.current : video2Ref.current;
+    const roi = isFirst ? roi1State.current : roi2State.current;
+    
+    if (!canvas || !roi || !video) return;
+    
+    // Create temporary canvas for ROI
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    const mainCtx = canvas.getContext('2d');
+    
+    if (!tempCtx || !mainCtx) return;
+  
+    // Calculate scale to maintain aspect ratio (same as in processFrame)
+    const scale = Math.min(
+      canvas.width / video.videoWidth,
+      canvas.height / video.videoHeight
+    );
+    
+    // Calculate centered position
+    const x = (canvas.width - video.videoWidth * scale) / 2;
+    const y = (canvas.height - video.videoHeight * scale) / 2;
+  
+    // Set dimensions to ROI size
+    tempCanvas.width = roi.width;
+    tempCanvas.height = roi.height;
+  
+    // First draw the current video frame to the main canvas
+    mainCtx.drawImage(
+      video,
+      0, 0,
+      video.videoWidth,
+      video.videoHeight,
+      x, y,
+      video.videoWidth * scale,
+      video.videoHeight * scale
+    );
+  
+    // Then capture the ROI portion
+    tempCtx.drawImage(
+      canvas,
+      roi.x, roi.y, roi.width, roi.height,
+      0, 0, roi.width, roi.height
+    );
+    
+    // Convert to base64
+    const roiImage = tempCanvas.toDataURL('image/png');
+    
+    // Update ROI analysis state
+    setRoiAnalysis(prev => ({
+      ...prev,
+      [isFirst ? 'roi1Image' : 'roi2Image']: roiImage
+    }));
+  };
+  
   const toggleStream = async () => {
     if (isStreaming) {
       if (videoRef.current?.srcObject) {
@@ -343,10 +408,23 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   
     if (isFirst) {
       setRoi1State(prev => ({ ...prev, isSelecting: false }));
+      captureROI(true);
     } else {
       setRoi2State(prev => ({ ...prev, isSelecting: false }));
+      captureROI(false);
     }
   };
+
+  // Update the delete ROI button click handlers
+const handleDeleteROI = (isFirst: boolean) => {
+  if (isFirst) {
+    setRoi1State(prev => ({ ...prev, current: null, isSelecting: false }));
+    setRoiAnalysis(prev => ({ ...prev, roi1Image: null }));
+  } else {
+    setRoi2State(prev => ({ ...prev, current: null, isSelecting: false }));
+    setRoiAnalysis(prev => ({ ...prev, roi2Image: null }));
+  }
+};
 
   const handleCanvasMouseLeave = (isFirst: boolean) => {
     if (isFirst) {
@@ -647,7 +725,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
             <Button 
               variant="outline" 
               size="icon"
-              onClick={() => setRoi1State(prev => ({ ...prev, current: null, isSelecting: false }))}
+              onClick={() => handleDeleteROI(true)}
               disabled={!roi1State.current}
             >
               <Trash2 className="h-4 w-4" /> 
@@ -739,7 +817,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                 <Button 
                   variant="outline" 
                   size="icon"
-                  onClick={() => setRoi2State(prev => ({ ...prev, current: null, isSelecting: false }))}
+                  onClick={() => handleDeleteROI(false)}
                   disabled={!roi2State.current}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -865,22 +943,37 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               <CardTitle className="text-sm text-center">ROI Analysis</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
-              {capturedImage ? (
-                <div className="h-full flex items-center justify-center bg-red-100 rounded-lg">
-                  <img 
-                    src={capturedImage} 
-                    alt="Captured screenshot" 
-                    className="max-h-full max-w-full object-contain"
-                  />
+              <div className="grid grid-cols-2 gap-2 h-full">
+                <div className="h-full bg-red-100 rounded-lg overflow-hidden">
+                  {roiAnalysis.roi1Image ? (
+                    <img 
+                      src={roiAnalysis.roi1Image} 
+                      alt="ROI 1" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <span className="text-sm text-red-500">No ROI selected</span>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="h-full bg-red-100 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-red-500">No image captured</span>
+                <div className="h-full bg-red-100 rounded-lg overflow-hidden">
+                  {roiAnalysis.roi2Image ? (
+                    <img 
+                      src={roiAnalysis.roi2Image} 
+                      alt="ROI 2" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <span className="text-sm text-red-500">No ROI selected</span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
-  
+          
           {/* Canny Output */}
           <Card className="flex flex-col h-64">
             <CardHeader className="p-0 pt-3 px-2">
