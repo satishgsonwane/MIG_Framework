@@ -1,6 +1,3 @@
-// app/components/VideoAnalysisApp.tsx
-"use client";
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -126,6 +123,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
   const roiStartRef = useRef<{ x: number; y: number } | null>(null);
+
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -156,91 +154,95 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
     };
   }, []);
 
-  // Stream handlers
-  const startStream = async () => {
-    if (!selectedCamera1 || selectedCamera1 === "default") {
-      setError('Please select a camera first');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          ...VIDEO_CONSTRAINTS,
-          deviceId: { exact: selectedCamera1 }
-        }
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          if (videoRef.current && canvasRef.current) {
-            videoRef.current.play();
-            canvasRef.current.width = CANVAS_WIDTH;
-            canvasRef.current.height = CANVAS_HEIGHT;
-          }
-        };
-      }
-      setIsStreaming(true);
-      setError('');
-    } catch (err) {
-      setError('Unable to access first camera. Please check permissions.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const startStream2 = async () => {
-    if (!selectedCamera2 || selectedCamera2 === "default") {
-      setError('Please select a camera first');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          ...VIDEO_CONSTRAINTS,
-          deviceId: { exact: selectedCamera2 }
-        }
-      });
-      
-      if (video2Ref.current) {
-        video2Ref.current.srcObject = stream;
-        video2Ref.current.onloadedmetadata = () => {
-          if (video2Ref.current && canvas2Ref.current) {
-            video2Ref.current.play();
-            canvas2Ref.current.width = CANVAS_WIDTH;
-            canvas2Ref.current.height = CANVAS_HEIGHT;
-          }
-        };
-      }
-      setIsStream2Active(true);
-    } catch (err) {
-      setError('Unable to access second camera.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const stopStream = () => {
+  const toggleStream = async () => {
+  if (isStreaming) {
     if (videoRef.current?.srcObject) {
       const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
       setIsStreaming(false);
     }
-  };
+    return;
+  }
 
-  const stopStream2 = () => {
+  if (!selectedCamera1 || selectedCamera1 === "default") {
+    setError('Please select a camera first');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        ...VIDEO_CONSTRAINTS,
+        deviceId: { exact: selectedCamera1 }
+      }
+    });
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.onloadedmetadata = () => {
+        if (videoRef.current && canvasRef.current) {
+          videoRef.current.play();
+          canvasRef.current.width = CANVAS_WIDTH;
+          canvasRef.current.height = CANVAS_HEIGHT;
+        }
+      };
+    }
+    setIsStreaming(true);
+    setError('');
+  } catch (err) {
+    setError('Unable to access first camera. Please check permissions.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+const toggleStream2 = async () => {
+  if (isStream2Active) {
     if (video2Ref.current?.srcObject) {
       const tracks = (video2Ref.current.srcObject as MediaStream).getTracks();
       tracks.forEach(track => track.stop());
       video2Ref.current.srcObject = null;
       setIsStream2Active(false);
     }
-  };
+    return;
+  }
+
+  if (!selectedCamera2 || selectedCamera2 === "default") {
+    setError('Please select a camera first');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        ...VIDEO_CONSTRAINTS,
+        deviceId: { exact: selectedCamera2 }
+      }
+    });
+    
+    if (video2Ref.current) {
+      video2Ref.current.srcObject = stream;
+      video2Ref.current.onloadedmetadata = () => {
+        if (video2Ref.current && canvas2Ref.current) {
+          video2Ref.current.play();
+          canvas2Ref.current.width = CANVAS_WIDTH;
+          canvas2Ref.current.height = CANVAS_HEIGHT;
+        }
+      };
+    }
+    setIsStream2Active(true);
+  } catch (err) {
+    setError('Unable to access second camera.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+
   // Canvas handlers
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
     if (!(isFirst ? isSelectingRoi1 : isSelectingRoi2)) return;
@@ -417,13 +419,28 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
           })
           .catch(() => {});
       }
-      stopStream();
-      stopStream2();
+      
+      // Clean up first video stream
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+        setIsStreaming(false);
+      }
+  
+      // Clean up second video stream
+      if (video2Ref.current?.srcObject) {
+        const tracks = (video2Ref.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        video2Ref.current.srcObject = null;
+        setIsStream2Active(false);
+      }
     };
-
+  
     cleanup();
     return () => cleanup();
   }, []);
+  
   return (
     <div className="min-h-screen bg-red-50 p-4">
       <div className="grid grid-cols-3 gap-4">
@@ -456,27 +473,20 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                   </Select>
                 </div>
                 <div className="flex gap-1">
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => setIsSelectingRoi1(!isSelectingRoi1)}
-                  >
-                    <Square className={isSelectingRoi1 ? "text-sky-600 h-4 w-4" : "text-red-400 h-4 w-4"} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={isStreaming ? stopStream : startStream}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Spinner className="h-4 w-4" />
-                    ) : isStreaming ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
-                  </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={toggleStream}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : isStreaming ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                </Button>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -548,7 +558,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={isStream2Active ? stopStream2 : startStream2}
+                    onClick={toggleStream2}
                     disabled={isLoading}
                   >
                     {isLoading ? (
