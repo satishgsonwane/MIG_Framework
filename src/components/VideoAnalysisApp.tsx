@@ -350,7 +350,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
     return () => cleanup();
   }, []);
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-red-50 p-4">
       <div className="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
         {/* Left Column */}
         <div className="space-y-8">
@@ -386,7 +386,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                     size="icon"
                     onClick={() => setIsSelectingRoi1(!isSelectingRoi1)}
                   >
-                    <Square className={isSelectingRoi1 ? "text-sky-600 h-4 w-4" : "text-gray-400 h-4 w-4"} />
+                    <Square className={isSelectingRoi1 ? "text-sky-600 h-4 w-4" : "text-red-400 h-4 w-4"} />
                   </Button>
                   <Button
                     variant="outline"
@@ -412,7 +412,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                   autoPlay
                   playsInline
                   muted
-                  className="absolute inset-0 w-full h-full object-cover bg-gray-100"
+                  className="absolute inset-0 w-full h-full object-cover bg-red-100"
                   style={{ objectFit: 'cover' }}
                 />
                 <canvas
@@ -468,7 +468,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                     size="icon"
                     onClick={() => setIsSelectingRoi2(!isSelectingRoi2)}
                   >
-                    <Square className={isSelectingRoi2 ? "text-sky-600 h-4 w-4" : "text-gray-400 h-4 w-4"} />
+                    <Square className={isSelectingRoi2 ? "text-sky-600 h-4 w-4" : "text-red-400 h-4 w-4"} />
                   </Button>
                   <Button
                     variant="outline"
@@ -494,7 +494,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                   autoPlay
                   playsInline
                   muted
-                  className="absolute inset-0 w-full h-full object-cover bg-gray-100"
+                  className="absolute inset-0 w-full h-full object-cover bg-red-100"
                   style={{ objectFit: 'cover' }}
                 />
                 <canvas
@@ -540,7 +540,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               </div>
             </CardContent>
           </Card>
-  
           {/* ROI Output */}
           <Card className="flex flex-col h-64">
           <CardHeader className="p-0 pt-3 px-2">
@@ -548,7 +547,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
             </CardHeader>
             <CardContent className="p-2 flex-1">
               {capturedImage ? (
-                <div className="h-full flex items-center justify-center bg-gray-100 rounded-lg">
+                <div className="h-full flex items-center justify-center bg-red-100 rounded-lg">
                   <img 
                     src={capturedImage} 
                     alt="Captured screenshot" 
@@ -556,8 +555,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                   />
                 </div>
               ) : (
-                <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-gray-500">No image captured</span>
+                <div className="h-full bg-red-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm text-red-500">No image captured</span>
                 </div>
               )}
             </CardContent>
@@ -569,7 +568,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               <CardTitle className="text-sm text-center">Canny Edge Detection</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
-              <div className="h-full bg-gray-100 rounded-lg"></div>
+              <div className="h-full bg-red-100 rounded-lg"></div>
             </CardContent>
           </Card>
 
@@ -580,7 +579,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               <CardTitle className="text-sm text-center">Joint Analysis</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
-              <div className="h-full bg-gray-100 rounded-lg"></div>
+              <div className="h-full bg-red-100 rounded-lg"></div>
             </CardContent>
           </Card>
   
@@ -590,10 +589,10 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               <CardTitle className="text-sm text-center">LOWESS Visualization</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
-              <div className="h-full bg-gray-100 rounded-lg"></div>
+              <div className="h-full bg-red-100 rounded-lg"></div>
             </CardContent>
           </Card>
-          
+
         </div>
       </div>
   
