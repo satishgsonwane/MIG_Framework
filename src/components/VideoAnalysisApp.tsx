@@ -514,8 +514,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
           {/* Joint Configuration */}
           <Card className="flex flex-col space-y-3 col-span-2">
             <CardContent className="p-2 flex-1">
-            <CardTitle className="text-mm text-center">Joint Configuration</CardTitle>
-            <CardDescription>Select the type of joint for analysis</CardDescription>
+            <CardTitle className="py-2 text-mm text-center">Joint Configuration</CardTitle>
+            <CardDescription className='pb-3'>Select the type of joint for analysis</CardDescription>
               <div className="grid grid-cols-2 gap-4">
 
                 <Select value={jointType} onValueChange={setJointType}>
@@ -538,26 +538,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
                   </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-  
-          {/* Joint Analysis */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-0 pt-3 px-2">
-              <CardTitle className="text-sm text-center">Joint Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="h-full bg-gray-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-  
-          {/* LOWESS Output */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-0 pt-3 px-2">
-              <CardTitle className="text-sm text-center">LOWESS Visualization</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="h-full bg-gray-100 rounded-lg"></div>
             </CardContent>
           </Card>
   
@@ -592,6 +572,28 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               <div className="h-full bg-gray-100 rounded-lg"></div>
             </CardContent>
           </Card>
+
+            
+          {/* Joint Analysis */}
+          <Card className="flex flex-col h-64">
+            <CardHeader className="p-0 pt-3 px-2">
+              <CardTitle className="text-sm text-center">Joint Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 flex-1">
+              <div className="h-full bg-gray-100 rounded-lg"></div>
+            </CardContent>
+          </Card>
+  
+          {/* LOWESS Output */}
+          <Card className="flex flex-col h-64">
+            <CardHeader className="p-0 pt-3 px-2">
+              <CardTitle className="text-sm text-center">LOWESS Visualization</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 flex-1">
+              <div className="h-full bg-gray-100 rounded-lg"></div>
+            </CardContent>
+          </Card>
+          
         </div>
       </div>
   
