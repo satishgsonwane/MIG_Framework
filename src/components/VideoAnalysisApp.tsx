@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Square, Play, Pause, Camera } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
+import { Square, Play, Pause, Camera, Trash2 } from 'lucide-react';
 
 interface VideoAnalysisProps {
   onAnalysisComplete?: (data: any) => void;
@@ -16,6 +16,20 @@ interface JointType {
   id: string;
   name: string;
   description: string;
+}
+
+// Add these interfaces at the top with other interfaces
+interface ROI {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface ROIState {
+  start: { x: number; y: number } | null;
+  current: ROI | null;
+  isSelecting: boolean;
 }
 
 interface WeldParameter {
@@ -31,6 +45,7 @@ const jointTypes: JointType[] = [
   { id: 'tee', name: 'T Joint', description: 'Perpendicular joint connection' },
   { id: 'corner', name: 'Corner Joint', description: '90-degree angle joint' },
 ];
+
 
 const weldParameters: WeldParameter[] = [
   {
@@ -101,10 +116,16 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const [isLoading, setIsLoading] = useState(false);
   
   // ROI states
-  const [isSelectingRoi1, setIsSelectingRoi1] = useState(false);
-  const [isSelectingRoi2, setIsSelectingRoi2] = useState(false);
-  const [roi1, setRoi1] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [roi2, setRoi2] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [roi1State, setRoi1State] = useState<ROIState>({
+    start: null,
+    current: null,
+    isSelecting: false
+  });
+  const [roi2State, setRoi2State] = useState<ROIState>({
+    start: null,
+    current: null,
+    isSelecting: false
+  });
   
   // Other states
   const [error, setError] = useState('');
@@ -122,7 +143,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const video2Ref = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
-  const roiStartRef = useRef<{ x: number; y: number } | null>(null);
+  // const roiStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // Effect for getting cameras
   useEffect(() => {
@@ -155,240 +176,390 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   }, []);
 
   const toggleStream = async () => {
-  if (isStreaming) {
-    if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setIsStreaming(false);
-    }
-    return;
-  }
-
-  if (!selectedCamera1 || selectedCamera1 === "default") {
-    setError('Please select a camera first');
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        ...VIDEO_CONSTRAINTS,
-        deviceId: { exact: selectedCamera1 }
+    if (isStreaming) {
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+        setRoi1State({ start: null, current: null, isSelecting: false });
+        setIsStreaming(false);
       }
-    });
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.onloadedmetadata = () => {
-        if (videoRef.current && canvasRef.current) {
-          videoRef.current.play();
-          canvasRef.current.width = CANVAS_WIDTH;
-          canvasRef.current.height = CANVAS_HEIGHT;
+      return;
+    }
+  
+    if (!selectedCamera1 || selectedCamera1 === "default") {
+      setError('Please select a camera first');
+      return;
+    }
+  
+    setIsLoading(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          ...VIDEO_CONSTRAINTS,
+          deviceId: { exact: selectedCamera1 }
         }
-      };
-    }
-    setIsStreaming(true);
-    setError('');
-  } catch (err) {
-    setError('Unable to access first camera. Please check permissions.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-const toggleStream2 = async () => {
-  if (isStream2Active) {
-    if (video2Ref.current?.srcObject) {
-      const tracks = (video2Ref.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
-      video2Ref.current.srcObject = null;
-      setIsStream2Active(false);
-    }
-    return;
-  }
-
-  if (!selectedCamera2 || selectedCamera2 === "default") {
-    setError('Please select a camera first');
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        ...VIDEO_CONSTRAINTS,
-        deviceId: { exact: selectedCamera2 }
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current && canvasRef.current) {
+            videoRef.current.play();
+            canvasRef.current.width = CANVAS_WIDTH;
+            canvasRef.current.height = CANVAS_HEIGHT;
+          }
+        };
       }
-    });
-    
-    if (video2Ref.current) {
-      video2Ref.current.srcObject = stream;
-      video2Ref.current.onloadedmetadata = () => {
-        if (video2Ref.current && canvas2Ref.current) {
-          video2Ref.current.play();
-          canvas2Ref.current.width = CANVAS_WIDTH;
-          canvas2Ref.current.height = CANVAS_HEIGHT;
-        }
-      };
+      setIsStreaming(true);
+      setError('');
+    } catch (err) {
+      setError('Unable to access first camera. Please check permissions.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsStream2Active(true);
-  } catch (err) {
-    setError('Unable to access second camera.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-
+  };
+  
+  const toggleStream2 = async () => {
+    if (isStream2Active) {
+      if (video2Ref.current?.srcObject) {
+        const tracks = (video2Ref.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        video2Ref.current.srcObject = null;
+        setRoi2State({ start: null, current: null, isSelecting: false });
+        setIsStream2Active(false);
+      }
+      return;
+    }
+  
+    if (!selectedCamera2 || selectedCamera2 === "default") {
+      setError('Please select a camera first');
+      return;
+    }
+  
+    setIsLoading(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          ...VIDEO_CONSTRAINTS,
+          deviceId: { exact: selectedCamera2 }
+        }
+      });
+      
+      if (video2Ref.current) {
+        video2Ref.current.srcObject = stream;
+        video2Ref.current.onloadedmetadata = () => {
+          if (video2Ref.current && canvas2Ref.current) {
+            video2Ref.current.play();
+            canvas2Ref.current.width = CANVAS_WIDTH;
+            canvas2Ref.current.height = CANVAS_HEIGHT;
+          }
+        };
+      }
+      setIsStream2Active(true);
+      setError('');
+    } catch (err) {
+      setError('Unable to access second camera.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Canvas handlers
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
-    if (!(isFirst ? isSelectingRoi1 : isSelectingRoi2)) return;
+    const roiState = isFirst ? roi1State : roi2State;
+    if (!roiState.isSelecting) return;
     
     const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
     if (!canvas) return;
-
+    
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    roiStartRef.current = {
+    const startPoint = {
       x: (e.clientX - rect.left) * scaleX,
       y: (e.clientY - rect.top) * scaleY
     };
+  
+    if (isFirst) {
+      setRoi1State(prev => ({
+        ...prev,
+        start: startPoint,
+        current: {
+          x: startPoint.x,
+          y: startPoint.y,
+          width: 0,
+          height: 0
+        }
+      }));
+    } else {
+      setRoi2State(prev => ({
+        ...prev,
+        start: startPoint,
+        current: {
+          x: startPoint.x,
+          y: startPoint.y,
+          width: 0,
+          height: 0
+        }
+      }));
+    }
   };
-
+  
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
-    if (!(isFirst ? isSelectingRoi1 : isSelectingRoi2) || !roiStartRef.current) return;
-    
+    const roiState = isFirst ? roi1State : roi2State;
+    if (!roiState.isSelecting || !roiState.start) return;
+  
     const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
     if (!canvas) return;
-
+  
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
     const currentX = (e.clientX - rect.left) * scaleX;
     const currentY = (e.clientY - rect.top) * scaleY;
-
-    const newRoi = {
-      x: Math.min(roiStartRef.current.x, currentX),
-      y: Math.min(roiStartRef.current.y, currentY),
-      width: Math.abs(currentX - roiStartRef.current.x),
-      height: Math.abs(currentY - roiStartRef.current.y)
+  
+    const newROI = {
+      x: Math.min(roiState.start.x, currentX),
+      y: Math.min(roiState.start.y, currentY),
+      width: Math.abs(currentX - roiState.start.x),
+      height: Math.abs(currentY - roiState.start.y)
     };
-
+  
     if (isFirst) {
-      setRoi1(newRoi);
+      setRoi1State(prev => ({ ...prev, current: newROI }));
     } else {
-      setRoi2(newRoi);
+      setRoi2State(prev => ({ ...prev, current: newROI }));
+    }
+  
+    drawROI(canvas, newROI);
+  };
+  
+  const handleCanvasMouseUp = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
+    const roiState = isFirst ? roi1State : roi2State;
+    if (!roiState.isSelecting || !roiState.start) return;
+  
+    if (isFirst) {
+      setRoi1State(prev => ({ ...prev, isSelecting: false }));
+    } else {
+      setRoi2State(prev => ({ ...prev, isSelecting: false }));
     }
   };
 
-  const handleCanvasMouseUp = (isFirst: boolean) => {
+  const handleCanvasMouseLeave = (isFirst: boolean) => {
     if (isFirst) {
-      setIsSelectingRoi1(false);
+      setRoi1State(prev => ({ ...prev, isSelecting: false }));
     } else {
-      setIsSelectingRoi2(false);
+      setRoi2State(prev => ({ ...prev, isSelecting: false }));
     }
-    roiStartRef.current = null;
   };
 
-  // Frame processing
+  const drawROI = (canvas: HTMLCanvasElement, roi: ROI) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+  
+    // Clear the canvas first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw the video frame first
+    const video = canvas === canvasRef.current ? videoRef.current : video2Ref.current;
+    if (video) {
+      const scale = Math.min(
+        canvas.width / video.videoWidth,
+        canvas.height / video.videoHeight
+      );
+      
+      const x = (canvas.width - video.videoWidth * scale) / 2;
+      const y = (canvas.height - video.videoHeight * scale) / 2;
+  
+      ctx.drawImage(
+        video,
+        0, 0,
+        video.videoWidth,
+        video.videoHeight,
+        x, y,
+        video.videoWidth * scale,
+        video.videoHeight * scale
+      );
+    }
+  
+    // Draw ROI
+    ctx.setLineDash([6]);
+    ctx.strokeStyle = '#3B82F6';
+    ctx.lineWidth = 3;
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+    
+    ctx.fillRect(roi.x, roi.y, roi.width, roi.height);
+    ctx.strokeRect(roi.x, roi.y, roi.width, roi.height);
+  };
+
+  // Frame processing function
   const processFrame = () => {
-    if (videoRef.current && canvasRef.current && isStreaming) {
-      const ctx = canvasRef.current.getContext('2d', {
-        alpha: false,
-        desynchronized: true
-      });
+  // Process first video feed
+  if (videoRef.current && canvasRef.current && isStreaming) {
+    const ctx = canvasRef.current.getContext('2d', {
+      alpha: false,
+      desynchronized: true
+    });
+    
+    if (ctx) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       
-      if (ctx) {
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        
-        const scale = Math.min(
-          canvasRef.current.width / videoRef.current.videoWidth,
-          canvasRef.current.height / videoRef.current.videoHeight
-        );
-        
-        const x = (canvasRef.current.width - videoRef.current.videoWidth * scale) / 2;
-        const y = (canvasRef.current.height - videoRef.current.videoHeight * scale) / 2;
+      // Calculate scale to maintain aspect ratio
+      const scale = Math.min(
+        canvasRef.current.width / videoRef.current.videoWidth,
+        canvasRef.current.height / videoRef.current.videoHeight
+      );
+      
+      // Center the video in canvas
+      const x = (canvasRef.current.width - videoRef.current.videoWidth * scale) / 2;
+      const y = (canvasRef.current.height - videoRef.current.videoHeight * scale) / 2;
 
-        ctx.drawImage(
-          videoRef.current,
-          0, 0,
-          videoRef.current.videoWidth,
-          videoRef.current.videoHeight,
-          x, y,
-          videoRef.current.videoWidth * scale,
-          videoRef.current.videoHeight * scale
-        );
+      // Draw video frame
+      ctx.drawImage(
+        videoRef.current,
+        0, 0,
+        videoRef.current.videoWidth,
+        videoRef.current.videoHeight,
+        x, y,
+        videoRef.current.videoWidth * scale,
+        videoRef.current.videoHeight * scale
+      );
 
-        if (roi1.width && roi1.height) {
-          ctx.strokeStyle = '#0284c7';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(roi1.x, roi1.y, roi1.width, roi1.height);
-        }
+      // Draw ROI if exists and is being selected or completed
+      if (roi1State.isSelecting && roi1State.current) {
+        ctx.setLineDash([6]);
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+        ctx.fillRect(
+          roi1State.current.x,
+          roi1State.current.y,
+          roi1State.current.width,
+          roi1State.current.height
+        );
+        ctx.strokeRect(
+          roi1State.current.x,
+          roi1State.current.y,
+          roi1State.current.width,
+          roi1State.current.height
+        );
+      } else if (!roi1State.isSelecting && roi1State.current) {
+        // Draw completed ROI
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+        ctx.fillRect(
+          roi1State.current.x,
+          roi1State.current.y,
+          roi1State.current.width,
+          roi1State.current.height
+        );
+        ctx.strokeRect(
+          roi1State.current.x,
+          roi1State.current.y,
+          roi1State.current.width,
+          roi1State.current.height
+        );
       }
     }
+  }
 
-    if (video2Ref.current && canvas2Ref.current && isStream2Active) {
-      const ctx = canvas2Ref.current.getContext('2d', {
-        alpha: false,
-        desynchronized: true
-      });
+  // Process second video feed
+  if (video2Ref.current && canvas2Ref.current && isStream2Active) {
+    const ctx = canvas2Ref.current.getContext('2d', {
+      alpha: false,
+      desynchronized: true
+    });
+    
+    if (ctx) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       
-      if (ctx) {
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        
-        const scale = Math.min(
-          canvas2Ref.current.width / video2Ref.current.videoWidth,
-          canvas2Ref.current.height / video2Ref.current.videoHeight
-        );
-        
-        const x = (canvas2Ref.current.width - video2Ref.current.videoWidth * scale) / 2;
-        const y = (canvas2Ref.current.height - video2Ref.current.videoHeight * scale) / 2;
+      // Calculate scale to maintain aspect ratio
+      const scale = Math.min(
+        canvas2Ref.current.width / video2Ref.current.videoWidth,
+        canvas2Ref.current.height / video2Ref.current.videoHeight
+      );
+      
+      // Center the video in canvas
+      const x = (canvas2Ref.current.width - video2Ref.current.videoWidth * scale) / 2;
+      const y = (canvas2Ref.current.height - video2Ref.current.videoHeight * scale) / 2;
 
-        ctx.drawImage(
-          video2Ref.current,
-          0, 0,
-          video2Ref.current.videoWidth,
-          video2Ref.current.videoHeight,
-          x, y,
-          video2Ref.current.videoWidth * scale,
-          video2Ref.current.videoHeight * scale
-        );
+      // Draw video frame
+      ctx.drawImage(
+        video2Ref.current,
+        0, 0,
+        video2Ref.current.videoWidth,
+        video2Ref.current.videoHeight,
+        x, y,
+        video2Ref.current.videoWidth * scale,
+        video2Ref.current.videoHeight * scale
+      );
 
-        if (roi2.width && roi2.height) {
-          ctx.strokeStyle = '#0284c7';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(roi2.x, roi2.y, roi2.width, roi2.height);
-        }
+      // Draw ROI if exists and is being selected or completed
+      if (roi2State.isSelecting && roi2State.current) {
+        ctx.setLineDash([6]);
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+        ctx.fillRect(
+          roi2State.current.x,
+          roi2State.current.y,
+          roi2State.current.width,
+          roi2State.current.height
+        );
+        ctx.strokeRect(
+          roi2State.current.x,
+          roi2State.current.y,
+          roi2State.current.width,
+          roi2State.current.height
+        );
+      } else if (!roi2State.isSelecting && roi2State.current) {
+        // Draw completed ROI
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+        ctx.fillRect(
+          roi2State.current.x,
+          roi2State.current.y,
+          roi2State.current.width,
+          roi2State.current.height
+        );
+        ctx.strokeRect(
+          roi2State.current.x,
+          roi2State.current.y,
+          roi2State.current.width,
+          roi2State.current.height
+        );
       }
     }
+  }
 
-    if (isStreaming || isStream2Active) {
-      const frameId = requestAnimationFrame(processFrame);
-      setAnimationFrame(frameId);
-    }
-  };
-
+  // Continue animation if either stream is active
+  if (isStreaming || isStream2Active) {
+    const frameId = requestAnimationFrame(processFrame);
+    setAnimationFrame(frameId);
+  }
+};
   // Effect for frame processing
   useEffect(() => {
     if (isStreaming || isStream2Active) {
       const frameId = requestAnimationFrame(processFrame);
       setAnimationFrame(frameId);
     }
-
+  
     return () => {
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [isStreaming, isStream2Active]);
+  }, [isStreaming, isStream2Active, roi1State, roi2State]); // Add ROI states as dependencies
 
   // Screenshot handler
   const captureScreenshot = () => {
@@ -449,46 +620,62 @@ const toggleStream2 = async () => {
           {/* First Video Feed */}
           <Card>
             <CardHeader className="p-4">
-              <CardTitle className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <span>Depth Camera Feed</span>
-                  <Select 
-                    value={selectedCamera1 || "default"} 
-                    onValueChange={setSelectedCamera1}
-                  >
-                    <SelectTrigger className="w-55">
-                      <SelectValue placeholder="Select camera" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="default" disabled>Select a camera</SelectItem>
-                      {cameras.map((camera) => (
-                        <SelectItem 
-                          key={camera.deviceId} 
-                          value={camera.deviceId}
-                        >
-                          {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={toggleStream}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Spinner className="h-4 w-4" />
-                  ) : isStreaming ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                </Button>
-                </div>
-              </CardTitle>
+            <CardTitle className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <span>Depth Camera Feed</span>
+              <Select 
+                value={selectedCamera1 || "default"} 
+                onValueChange={setSelectedCamera1}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select camera" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default" disabled>Select a camera</SelectItem>
+                  {cameras.map((camera) => (
+                    <SelectItem 
+                      key={camera.deviceId} 
+                      value={camera.deviceId}
+                    >
+                      {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-1">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setRoi1State(prev => ({ ...prev, current: null, isSelecting: false }))}
+              disabled={!roi1State.current}
+            >
+              <Trash2 className="h-4 w-4" /> 
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setRoi1State(prev => ({ ...prev, isSelecting: !prev.isSelecting }))}
+              className={roi1State.isSelecting ? "bg-sky-100" : ""}
+            >
+              <Square className={roi1State.isSelecting ? "text-sky-600 h-4 w-4" : "text-gray-400 h-4 w-4"} />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleStream}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Spinner className="h-4 w-4" />
+              ) : isStreaming ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
               <div className="relative aspect-video max-w-md mx-auto">
@@ -505,7 +692,8 @@ const toggleStream2 = async () => {
                   className="absolute inset-0 w-full h-full object-cover"
                   onMouseDown={(e) => handleCanvasMouseDown(e, true)}
                   onMouseMove={(e) => handleCanvasMouseMove(e, true)}
-                  onMouseUp={() => handleCanvasMouseUp(true)}
+                  onMouseUp={(e) => handleCanvasMouseUp(e, true)}
+                  onMouseLeave={() => handleCanvasMouseLeave(true)}
                 />
               </div>
               <div className="mt-4 flex justify-center">
@@ -531,7 +719,7 @@ const toggleStream2 = async () => {
                     value={selectedCamera2 || "default"} 
                     onValueChange={setSelectedCamera2}
                   >
-                    <SelectTrigger className="w-55">
+                    <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Select camera" />
                     </SelectTrigger>
                     <SelectContent>
@@ -548,28 +736,37 @@ const toggleStream2 = async () => {
                   </Select>
                 </div>
                 <div className="flex gap-1">
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => setIsSelectingRoi2(!isSelectingRoi2)}
-                  >
-                    <Square className={isSelectingRoi2 ? "text-sky-600 h-4 w-4" : "text-red-400 h-4 w-4"} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={toggleStream2}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Spinner className="h-4 w-4" />
-                    ) : isStream2Active ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setRoi2State(prev => ({ ...prev, current: null, isSelecting: false }))}
+                  disabled={!roi2State.current}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setRoi2State(prev => ({ ...prev, isSelecting: !prev.isSelecting }))}
+                  className={roi2State.isSelecting ? "bg-sky-100" : ""}
+                >
+                  <Square className={roi2State.isSelecting ? "text-sky-600 h-4 w-4" : "text-gray-400 h-4 w-4"} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={toggleStream2}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : isStream2Active ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
@@ -582,13 +779,14 @@ const toggleStream2 = async () => {
                   className="absolute inset-0 w-full h-full object-cover bg-red-100"
                   style={{ objectFit: 'cover' }}
                 />
-                <canvas
-                  ref={canvas2Ref}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  onMouseDown={(e) => handleCanvasMouseDown(e, false)}
-                  onMouseMove={(e) => handleCanvasMouseMove(e, false)}
-                  onMouseUp={() => handleCanvasMouseUp(false)}
-                />
+                  <canvas
+                    ref={canvas2Ref}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onMouseDown={(e) => handleCanvasMouseDown(e, false)}
+                    onMouseMove={(e) => handleCanvasMouseMove(e, false)}
+                    onMouseUp={(e) => handleCanvasMouseUp(e, false)}
+                    onMouseLeave={() => handleCanvasMouseLeave(false)}
+                  />
               </div>
             </CardContent>
           </Card>
