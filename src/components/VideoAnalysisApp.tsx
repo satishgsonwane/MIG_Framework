@@ -1,3 +1,6 @@
+// app/components/VideoAnalysisApp.tsx
+"use client";
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -17,11 +20,64 @@ interface JointType {
   name: string;
   description: string;
 }
+
+interface WeldParameter {
+  id: string;
+  name: string;
+  unit: string;
+  options: string[];
+}
+
 const jointTypes: JointType[] = [
   { id: 'butt', name: 'Butt Joint', description: 'End to end joint connection' },
   { id: 'lap', name: 'Lap Joint', description: 'Overlapping joint connection' },
   { id: 'tee', name: 'T Joint', description: 'Perpendicular joint connection' },
   { id: 'corner', name: 'Corner Joint', description: '90-degree angle joint' },
+];
+
+const weldParameters: WeldParameter[] = [
+  {
+    id: 'material',
+    name: 'Welding Material',
+    unit: '',
+    options: ['Carbon Steel', 'Stainless Steel', 'Aluminum', 'Nickel Alloy']
+  },
+  {
+    id: 'current',
+    name: 'Welding Current',
+    unit: 'A',
+    options: ['50', '100', '150', '200', '250', '300', '350', '400']
+  },
+  {
+    id: 'voltage',
+    name: 'Welding Voltage',
+    unit: 'V',
+    options: ['15', '18', '21', '24', '27', '30', '33', '36']
+  },
+  {
+    id: 'speed',
+    name: 'Welding Speed',
+    unit: 'mm/s',
+    options: ['2', '4', '6', '8', '10', '12', '14', '16']
+  },
+  {
+    id: 'wireFeedSpeed',
+    name: 'Wire Feed Speed',
+    unit: 'm/min',
+    options: ['2', '4', '6', '8', '10', '12', '14', '16']
+  },
+  {
+    id: 'gasFlow',
+    name: 'Gas Flow',
+    unit: 'L/min',
+    options: ['8', '10', '12', '14', '16', '18', '20', '22']
+  },
+  {
+    id: 'wireDiameter',
+    name: 'Wire Diameter',
+    unit: 'mm',
+    options: ['0.8', '1.0', '1.2', '1.6']
+  }
 ];
 
 const VIDEO_CONSTRAINTS = {
@@ -33,6 +89,9 @@ const VIDEO_CONSTRAINTS = {
 
 const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
+
+
+
 const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) => {
   // Camera device states
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
@@ -55,6 +114,11 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const [jointType, setJointType] = useState(jointTypes[0].id);
   const [animationFrame, setAnimationFrame] = useState<number | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  
+  // Weld parameter states
+  const [weldParams, setWeldParams] = useState<Record<string, string>>(() => 
+    Object.fromEntries(weldParameters.map(param => [param.id, param.options[0]]))
+  );
 
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -62,6 +126,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
   const roiStartRef = useRef<{ x: number; y: number } | null>(null);
+  // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
       try {
@@ -90,6 +155,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       navigator.mediaDevices.removeEventListener('devicechange', getCameras);
     };
   }, []);
+
+  // Stream handlers
   const startStream = async () => {
     if (!selectedCamera1 || selectedCamera1 === "default") {
       setError('Please select a camera first');
@@ -174,6 +241,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       setIsStream2Active(false);
     }
   };
+  // Canvas handlers
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
     if (!(isFirst ? isSelectingRoi1 : isSelectingRoi2)) return;
     
@@ -225,6 +293,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
     }
     roiStartRef.current = null;
   };
+
+  // Frame processing
   const processFrame = () => {
     if (videoRef.current && canvasRef.current && isStreaming) {
       const ctx = canvasRef.current.getContext('2d', {
@@ -304,6 +374,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
     }
   };
 
+  // Effect for frame processing
   useEffect(() => {
     if (isStreaming || isStream2Active) {
       const frameId = requestAnimationFrame(processFrame);
@@ -316,6 +387,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       }
     };
   }, [isStreaming, isStream2Active]);
+
+  // Screenshot handler
   const captureScreenshot = () => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
@@ -323,6 +396,8 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       setCapturedImage(imageData);
     }
   };
+
+  // Cleanup effect
   useEffect(() => {
     const cleanup = () => {
       if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
@@ -510,14 +585,13 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
         </div>
   
         {/* Right Column - Analysis Outputs */}
-        <div className="grid grid-cols-2 gap-4 h-[600px]">
+        <div className="grid grid-cols-2 gap-4">
           {/* Joint Configuration */}
           <Card className="flex flex-col space-y-3 col-span-2">
             <CardContent className="p-2 flex-1">
-            <CardTitle className="py-2 text-mm text-center">Joint Configuration</CardTitle>
-            <CardDescription className='pb-3'>Select the type of joint for analysis</CardDescription>
+              <CardTitle className="py-2 text-mm text-center">Joint Configuration</CardTitle>
+              <CardDescription className="pb-3">Select the type of joint for analysis</CardDescription>
               <div className="grid grid-cols-2 gap-4">
-
                 <Select value={jointType} onValueChange={setJointType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select joint type" />
@@ -540,9 +614,44 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               </div>
             </CardContent>
           </Card>
+
+          {/* Weld Parameters */}
+          <Card className="flex flex-col space-y-3 col-span-2">
+            <CardContent className="p-2 flex-1">
+              <CardTitle className="py-2 text-mm text-center">Weld Parameters</CardTitle>
+              <CardDescription className='pb-3'>Configure welding parameters for analysis</CardDescription>
+              <div className="grid grid-cols-2 gap-4">
+                {weldParameters.map((param: WeldParameter) => (
+                  <div key={param.id} className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {param.name} {param.unit && `(${param.unit})`}
+                    </label>
+                    <Select
+                      value={weldParams[param.id]}
+                      onValueChange={(value: string) => 
+                        setWeldParams((prev: Record<string, string>) => ({ ...prev, [param.id]: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={`Select ${param.name}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {param.options.map((option: string) => (
+                          <SelectItem key={option} value={option}>
+                            {option} {param.unit}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+  
           {/* ROI Output */}
           <Card className="flex flex-col h-64">
-          <CardHeader className="p-0 pt-3 px-2">
+            <CardHeader className="p-0 pt-3 px-2">
               <CardTitle className="text-sm text-center">ROI Analysis</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
@@ -564,15 +673,14 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   
           {/* Canny Output */}
           <Card className="flex flex-col h-64">
-          <CardHeader className="p-0 pt-3 px-2">
+            <CardHeader className="p-0 pt-3 px-2">
               <CardTitle className="text-sm text-center">Canny Edge Detection</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-1">
               <div className="h-full bg-red-100 rounded-lg"></div>
             </CardContent>
           </Card>
-
-            
+  
           {/* Joint Analysis */}
           <Card className="flex flex-col h-64">
             <CardHeader className="p-0 pt-3 px-2">
@@ -592,7 +700,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
               <div className="h-full bg-red-100 rounded-lg"></div>
             </CardContent>
           </Card>
-
         </div>
       </div>
   
@@ -603,6 +710,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       )}
     </div>
   );
-  };
-  
-  export default VideoAnalysisApp;
+};
+
+export default VideoAnalysisApp;
