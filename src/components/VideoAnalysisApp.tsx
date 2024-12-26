@@ -426,7 +426,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   }, []);
   return (
     <div className="min-h-screen bg-red-50 p-4">
-      <div className="grid grid-cols-3 gap-4 mx-auto">
+      <div className="grid grid-cols-3 gap-4">
         {/* Left Column */}
         <div className="space-y-8">
           {/* First Video Feed */}
@@ -585,7 +585,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
         </div>
   
         {/* Right Column - Analysis Outputs */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid-cols-2 gap-4 space-y-4">
           {/* Joint Configuration */}
           <Card className="flex flex-col space-y-3 col-span-2">
             <CardContent className="p-2 flex-1">
@@ -651,8 +651,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
         </div>
         {/* Right Column - Analysis Outputs */}
         <div className="grid grid-cols-2 gap-4">
-
-  
           {/* ROI Output */}
           <Card className="flex flex-col h-64">
             <CardHeader className="p-0 pt-3 px-2">
