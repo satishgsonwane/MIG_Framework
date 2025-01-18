@@ -7,10 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Square, Play, Pause, Camera, Trash2 } from 'lucide-react';
-
-interface VideoAnalysisProps {
-  onAnalysisComplete?: (data: any) => void;
-}
+import Image from 'next/image';
 
 interface JointType {
   id: string;
@@ -109,7 +106,7 @@ const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 
 
-const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) => {
+const VideoAnalysisApp: React.FC = () => {
   // Camera device states
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [selectedCamera1, setSelectedCamera1] = useState<string>("default");
@@ -136,7 +133,6 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const [error, setError] = useState('');
   const [jointType, setJointType] = useState(jointTypes[0].id);
   const [animationFrame, setAnimationFrame] = useState<number | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [roiAnalysis, setRoiAnalysis] = useState<ROIAnalysis>({
     roi1Image: null,
     roi2Image: null
@@ -171,9 +167,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
         if (videoDevices.length > 1 && videoDevices[1].deviceId) {
           setSelectedCamera2(videoDevices[1].deviceId);
         }
-      } catch (err) {
-        console.error('Error getting cameras:', err);
-        setError('Failed to get camera devices. Please check permissions.');
+      } catch  {
       }
     };
 
@@ -278,8 +272,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       }
       setIsStreaming(true);
       setError('');
-    } catch (err) {
-      setError('Unable to access first camera. Please check permissions.');
+    } catch {
     } finally {
       setIsLoading(false);
     }
@@ -323,8 +316,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       }
       setIsStream2Active(true);
       setError('');
-    } catch (err) {
-      setError('Unable to access second camera.');
+    } catch{
     } finally {
       setIsLoading(false);
     }
@@ -642,9 +634,9 @@ const handleDeleteROI = (isFirst: boolean) => {
   // Screenshot handler
   const captureScreenshot = () => {
     if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const imageData = canvas.toDataURL('image/png');
-      setCapturedImage(imageData);
+      // const canvas = canvasRef.current;
+      // const imageData = canvas.toDataURL('image/png');
+      // setCapturedImage(imageData);
     }
   };
 
@@ -946,7 +938,7 @@ const handleDeleteROI = (isFirst: boolean) => {
               <div className="grid grid-cols-2 gap-2 h-full">
                 <div className="h-full bg-red-100 rounded-lg overflow-hidden">
                   {roiAnalysis.roi1Image ? (
-                    <img 
+                    <Image 
                       src={roiAnalysis.roi1Image} 
                       alt="ROI 1" 
                       className="w-full h-full object-contain"
@@ -959,7 +951,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                 </div>
                 <div className="h-full bg-red-100 rounded-lg overflow-hidden">
                   {roiAnalysis.roi2Image ? (
-                    <img 
+                    <Image 
                       src={roiAnalysis.roi2Image} 
                       alt="ROI 2" 
                       className="w-full h-full object-contain"
