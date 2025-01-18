@@ -634,7 +634,7 @@ const handleDeleteROI = (isFirst: boolean) => {
   // Screenshot handler
   const captureScreenshot = () => {
     if (canvasRef.current) {
-      // const canvas = canvasRef.current;
+      // const canvas = canvasRef.current; //removed unused imports
       // const imageData = canvas.toDataURL('image/png');
       // setCapturedImage(imageData);
     }
