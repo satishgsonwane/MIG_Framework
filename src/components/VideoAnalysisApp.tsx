@@ -8,9 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Spinner from "@/components/ui/spinner";
 import { Square, Play, Pause, Camera, Trash2 } from 'lucide-react';
 
-interface VideoAnalysisProps {
-  onAnalysisComplete?: (data: any) => void;
-}
 
 interface JointType {
   id: string;
@@ -109,7 +106,7 @@ const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 
 
-const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) => {
+const VideoAnalysisApp: React.FC = () => {
   // Camera device states
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [selectedCamera1, setSelectedCamera1] = useState<string>("default");
@@ -136,7 +133,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
   const [error, setError] = useState('');
   const [jointType, setJointType] = useState(jointTypes[0].id);
   const [animationFrame, setAnimationFrame] = useState<number | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [, setCapturedImage] = useState<string | null>(null);
   const [roiAnalysis, setRoiAnalysis] = useState<ROIAnalysis>({
     roi1Image: null,
     roi2Image: null
@@ -279,6 +276,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       setIsStreaming(true);
       setError('');
     } catch (err) {
+      console.log("ERROR: ", err)
       setError('Unable to access first camera. Please check permissions.');
     } finally {
       setIsLoading(false);
@@ -324,6 +322,7 @@ const VideoAnalysisApp: React.FC<VideoAnalysisProps> = ({ onAnalysisComplete }) 
       setIsStream2Active(true);
       setError('');
     } catch (err) {
+      console.log("Error: ", err);
       setError('Unable to access second camera.');
     } finally {
       setIsLoading(false);

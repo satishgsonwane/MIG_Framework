@@ -1,16 +1,20 @@
 "use client"
-
 import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
-import { Command as CommandPrimitive } from "cmdk"
+import { Command as CommandPrimitiveOld } from "cmdk"
 import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+const CommandPrimitive: any = CommandPrimitiveOld
+
 const Command = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive>
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  any,
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  any
 >(({ className, ...props }, ref) => (
   <CommandPrimitive
     ref={ref}
