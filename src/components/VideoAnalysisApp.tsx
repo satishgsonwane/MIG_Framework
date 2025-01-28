@@ -133,7 +133,6 @@ const VideoAnalysisApp: React.FC = () => {
   const [error, setError] = useState('');
   const [jointType, setJointType] = useState(jointTypes[0].id);
   const [animationFrame, setAnimationFrame] = useState<number | null>(null);
-  const [, setCapturedImage] = useState<string | null>(null);
   const [roiAnalysis, setRoiAnalysis] = useState<ROIAnalysis>({
     roi1Image: null,
     roi2Image: null
@@ -335,17 +334,35 @@ const VideoAnalysisApp: React.FC = () => {
     if (!roiState.isSelecting) return;
     
     const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
-    if (!canvas) return;
+    const video = isFirst ? videoRef.current : video2Ref.current;
+    if (!canvas || !video) return;
     
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    const startPoint = {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY
-    };
-  
+    // Calculate video display dimensions
+    const scale = Math.min(
+      canvas.width / video.videoWidth,
+      canvas.height / video.videoHeight
+    );
+    const videoDisplayWidth = video.videoWidth * scale;
+    const videoDisplayHeight = video.videoHeight * scale;
+    const xOffset = (canvas.width - videoDisplayWidth) / 2;
+    const yOffset = (canvas.height - videoDisplayHeight) / 2;
+    
+    // Adjust coordinates to account for video position
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    // Check if click is within video bounds
+    if (x < xOffset || x > xOffset + videoDisplayWidth || 
+        y < yOffset || y > yOffset + videoDisplayHeight) {
+      return;
+    }
+
+    const startPoint = { x, y };
+    
     if (isFirst) {
       setRoi1State(prev => ({
         ...prev,
@@ -376,15 +393,26 @@ const VideoAnalysisApp: React.FC = () => {
     if (!roiState.isSelecting || !roiState.start) return;
   
     const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
-    if (!canvas) return;
+    const video = isFirst ? videoRef.current : video2Ref.current;
+    if (!canvas || !video) return;
   
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    const currentX = (e.clientX - rect.left) * scaleX;
-    const currentY = (e.clientY - rect.top) * scaleY;
-  
+    // Calculate video display dimensions
+    const scale = Math.min(
+      canvas.width / video.videoWidth,
+      canvas.height / video.videoHeight
+    );
+    const videoDisplayWidth = video.videoWidth * scale;
+    const videoDisplayHeight = video.videoHeight * scale;
+    const xOffset = (canvas.width - videoDisplayWidth) / 2;
+    const yOffset = (canvas.height - videoDisplayHeight) / 2;
+    
+    let currentX = Math.max(xOffset, Math.min((e.clientX - rect.left) * scaleX, xOffset + videoDisplayWidth));
+    let currentY = Math.max(yOffset, Math.min((e.clientY - rect.top) * scaleY, yOffset + videoDisplayHeight));
+
     const newROI = {
       x: Math.min(roiState.start.x, currentX),
       y: Math.min(roiState.start.y, currentY),
@@ -405,6 +433,20 @@ const VideoAnalysisApp: React.FC = () => {
     const roiState = isFirst ? roi1State : roi2State;
     if (!roiState.isSelecting || !roiState.start) return;
   
+    const MIN_ROI_SIZE = 20; // Minimum size in pixels
+    
+    if (roiState.current && 
+        (roiState.current.width < MIN_ROI_SIZE || 
+         roiState.current.height < MIN_ROI_SIZE)) {
+      // Reset ROI if too small
+      if (isFirst) {
+        setRoi1State(prev => ({ ...prev, current: null, isSelecting: false }));
+      } else {
+        setRoi2State(prev => ({ ...prev, current: null, isSelecting: false }));
+      }
+      return;
+    }
+
     if (isFirst) {
       setRoi1State(prev => ({ ...prev, isSelecting: false }));
       captureROI(true);
@@ -462,14 +504,32 @@ const handleDeleteROI = (isFirst: boolean) => {
       );
     }
   
-    // Draw ROI
+    // Draw ROI with improved visual style
     ctx.setLineDash([6]);
     ctx.strokeStyle = '#3B82F6';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
     
+    // Draw fill
     ctx.fillRect(roi.x, roi.y, roi.width, roi.height);
+    
+    // Draw border
     ctx.strokeRect(roi.x, roi.y, roi.width, roi.height);
+    
+    // Draw corner markers
+    const markerSize = 6;
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#3B82F6';
+    
+    // Draw corners
+    [
+      [roi.x, roi.y],
+      [roi.x + roi.width, roi.y],
+      [roi.x, roi.y + roi.height],
+      [roi.x + roi.width, roi.y + roi.height]
+    ].forEach(([x, y]) => {
+      ctx.fillRect(x - markerSize/2, y - markerSize/2, markerSize, markerSize);
+    });
   };
 
   // Frame processing function
@@ -638,15 +698,6 @@ const handleDeleteROI = (isFirst: boolean) => {
     };
   }, [isStreaming, isStream2Active, roi1State, roi2State]); // Add ROI states as dependencies
 
-  // Screenshot handler
-  const captureScreenshot = () => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const imageData = canvas.toDataURL('image/png');
-      setCapturedImage(imageData);
-    }
-  };
-
   // Cleanup effect
   useEffect(() => {
     const cleanup = () => {
@@ -772,16 +823,6 @@ const handleDeleteROI = (isFirst: boolean) => {
                   onMouseUp={(e) => handleCanvasMouseUp(e, true)}
                   onMouseLeave={() => handleCanvasMouseLeave(true)}
                 />
-              </div>
-              <div className="mt-4 flex justify-center">
-                <Button 
-                  variant="secondary"
-                  onClick={captureScreenshot}
-                  className="flex items-center gap-2"
-                >
-                  <Camera className="h-4 w-4" />
-                  Capture Screenshot
-                </Button>
               </div>
             </CardContent>
           </Card>
