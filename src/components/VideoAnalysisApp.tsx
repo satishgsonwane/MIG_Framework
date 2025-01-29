@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
-import { Square, Play, Pause, Camera, Trash2 } from 'lucide-react';
+import { Square, Play, Pause, Trash2 } from 'lucide-react';
 
 
 interface JointType {
@@ -410,8 +410,8 @@ const VideoAnalysisApp: React.FC = () => {
     const xOffset = (canvas.width - videoDisplayWidth) / 2;
     const yOffset = (canvas.height - videoDisplayHeight) / 2;
     
-    let currentX = Math.max(xOffset, Math.min((e.clientX - rect.left) * scaleX, xOffset + videoDisplayWidth));
-    let currentY = Math.max(yOffset, Math.min((e.clientY - rect.top) * scaleY, yOffset + videoDisplayHeight));
+    const currentX = Math.max(xOffset, Math.min((e.clientX - rect.left) * scaleX, xOffset + videoDisplayWidth));
+    const currentY = Math.max(yOffset, Math.min((e.clientY - rect.top) * scaleY, yOffset + videoDisplayHeight));
 
     const newROI = {
       x: Math.min(roiState.start.x, currentX),
