@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
 import { Square, Play, Pause, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 
 interface JointType {
@@ -741,124 +742,146 @@ const handleDeleteROI = (isFirst: boolean) => {
   }, []);
   
   return (
-    <div className="min-h-screen bg-red-50 p-4">
-      <div className="grid grid-cols-3 gap-4">
-        {/* Left Column */}
-        <div className="space-y-8">
-          {/* First Video Feed */}
-          <Card>
-            <CardHeader className="p-4">
+    <div className="min-h-screen bg-background p-6 space-y-6">
+      {/* Page Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Weld Analysis Dashboard</h1>
+        <p className="text-muted-foreground">
+          Real-time monitoring and analysis of welding processes using dual camera feeds.
+        </p>
+      </div>
+
+      {/* Top Row - Camera Feeds */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* First Video Feed */}
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-4 pb-2">
             <CardTitle className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <span>Depth Camera Feed</span>
-              <Select 
-                value={selectedCamera1 || "default"} 
-                onValueChange={setSelectedCamera1}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select camera" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default" disabled>Select a camera</SelectItem>
-                  {cameras.map((camera) => (
-                    <SelectItem 
-                      key={camera.deviceId} 
-                      value={camera.deviceId}
-                    >
-                      {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
+              <div className="flex items-center gap-4">
+                <span>Depth Camera Feed</span>
+                <Select 
+                  value={selectedCamera1 || "default"} 
+                  onValueChange={setSelectedCamera1}
+                >
+                  <SelectTrigger className="w-[200px] h-9 px-3 text-sm">
+                    <SelectValue placeholder="Select camera" />
+                  </SelectTrigger>
+                  <SelectContent className="min-w-[200px]">
+                    <SelectItem value="default" disabled className="text-muted-foreground">
+                      Select a camera
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-1">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => handleDeleteROI(true)}
-              disabled={!roi1State.current}
-            >
-              <Trash2 className="h-4 w-4" /> 
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => setRoi1State(prev => ({ ...prev, isSelecting: !prev.isSelecting }))}
-              className={roi1State.isSelecting ? "bg-sky-100" : ""}
-            >
-              <Square className={roi1State.isSelecting ? "text-sky-600 h-4 w-4" : "text-gray-400 h-4 w-4"} />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleStream}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Spinner className="h-4 w-4" />
-              ) : isStreaming ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="relative aspect-video max-w-md mx-auto">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="absolute inset-0 w-full h-full object-cover bg-red-100"
-                  style={{ objectFit: 'cover' }}
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  onMouseDown={(e) => handleCanvasMouseDown(e, true)}
-                  onMouseMove={(e) => handleCanvasMouseMove(e, true)}
-                  onMouseUp={(e) => handleCanvasMouseUp(e, true)}
-                  onMouseLeave={() => handleCanvasMouseLeave(true)}
-                />
+                    {cameras.map((camera) => (
+                      <SelectItem 
+                        key={camera.deviceId} 
+                        value={camera.deviceId}
+                        className="text-sm"
+                      >
+                        {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => handleDeleteROI(true)}
+                  disabled={!roi1State.current}
+                  className="hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" /> 
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setRoi1State(prev => ({ ...prev, isSelecting: !prev.isSelecting }))}
+                  className={cn(
+                    "transition-colors",
+                    roi1State.isSelecting ? "bg-primary/10 hover:bg-primary/20" : "hover:bg-primary/10"
+                  )}
+                >
+                  <Square className={cn(
+                    "h-4 w-4",
+                    roi1State.isSelecting ? "text-primary" : "text-muted-foreground"
+                  )} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={toggleStream}
+                  disabled={isLoading}
+                  className="hover:bg-primary/10 transition-colors"
+                >
+                  {isLoading ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : isStreaming ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-2">
+            <div className="relative aspect-[16/9] max-w-3xl mx-auto rounded-lg overflow-hidden border border-border">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover bg-muted"
+                style={{ objectFit: 'cover' }}
+              />
+              <canvas
+                ref={canvasRef}
+                className="absolute inset-0 w-full h-full object-cover"
+                onMouseDown={(e) => handleCanvasMouseDown(e, true)}
+                onMouseMove={(e) => handleCanvasMouseMove(e, true)}
+                onMouseUp={(e) => handleCanvasMouseUp(e, true)}
+                onMouseLeave={() => handleCanvasMouseLeave(true)}
+              />
+            </div>
+          </CardContent>
+        </Card>
   
-          {/* Second Video Feed */}
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <span>Weld Camera Feed</span>
-                  <Select 
-                    value={selectedCamera2 || "default"} 
-                    onValueChange={setSelectedCamera2}
-                  >
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Select camera" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="default" disabled>Select a camera</SelectItem>
-                      {cameras.map((camera) => (
-                        <SelectItem 
-                          key={camera.deviceId} 
-                          value={camera.deviceId}
-                        >
-                          {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-1">
+        {/* Second Video Feed */}
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <span>Weld Camera Feed</span>
+                <Select 
+                  value={selectedCamera2 || "default"} 
+                  onValueChange={setSelectedCamera2}
+                >
+                  <SelectTrigger className="w-[200px] h-9 px-3 text-sm">
+                    <SelectValue placeholder="Select camera" />
+                  </SelectTrigger>
+                  <SelectContent className="min-w-[200px]">
+                    <SelectItem value="default" disabled className="text-muted-foreground">
+                      Select a camera
+                    </SelectItem>
+                    {cameras.map((camera) => (
+                      <SelectItem 
+                        key={camera.deviceId} 
+                        value={camera.deviceId}
+                        className="text-sm"
+                      >
+                        {camera.label || `Camera ${camera.deviceId.slice(0, 5)}...`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
                 <Button 
                   variant="outline" 
                   size="icon"
                   onClick={() => handleDeleteROI(false)}
                   disabled={!roi2State.current}
+                  className="hover:bg-destructive/10 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -866,15 +889,22 @@ const handleDeleteROI = (isFirst: boolean) => {
                   variant="outline" 
                   size="icon"
                   onClick={() => setRoi2State(prev => ({ ...prev, isSelecting: !prev.isSelecting }))}
-                  className={roi2State.isSelecting ? "bg-sky-100" : ""}
+                  className={cn(
+                    "transition-colors",
+                    roi2State.isSelecting ? "bg-primary/10 hover:bg-primary/20" : "hover:bg-primary/10"
+                  )}
                 >
-                  <Square className={roi2State.isSelecting ? "text-sky-600 h-4 w-4" : "text-gray-400 h-4 w-4"} />
+                  <Square className={cn(
+                    "h-4 w-4",
+                    roi2State.isSelecting ? "text-primary" : "text-muted-foreground"
+                  )} />
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={toggleStream2}
                   disabled={isLoading}
+                  className="hover:bg-primary/10 transition-colors"
                 >
                   {isLoading ? (
                     <Spinner className="h-4 w-4" />
@@ -885,37 +915,39 @@ const handleDeleteROI = (isFirst: boolean) => {
                   )}
                 </Button>
               </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="relative aspect-video max-w-md mx-auto">
-                <video
-                  ref={video2Ref}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="absolute inset-0 w-full h-full object-cover bg-red-100"
-                  style={{ objectFit: 'cover' }}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-2">
+            <div className="relative aspect-[16/9] max-w-3xl mx-auto rounded-lg overflow-hidden border border-border">
+              <video
+                ref={video2Ref}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover bg-muted"
+                style={{ objectFit: 'cover' }}
+              />
+                <canvas
+                  ref={canvas2Ref}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onMouseDown={(e) => handleCanvasMouseDown(e, false)}
+                  onMouseMove={(e) => handleCanvasMouseMove(e, false)}
+                  onMouseUp={(e) => handleCanvasMouseUp(e, false)}
+                  onMouseLeave={() => handleCanvasMouseLeave(false)}
                 />
-                  <canvas
-                    ref={canvas2Ref}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    onMouseDown={(e) => handleCanvasMouseDown(e, false)}
-                    onMouseMove={(e) => handleCanvasMouseMove(e, false)}
-                    onMouseUp={(e) => handleCanvasMouseUp(e, false)}
-                    onMouseLeave={() => handleCanvasMouseLeave(false)}
-                  />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
   
-        {/* Right Column - Analysis Outputs */}
-        <div className="grid-cols-2 gap-4 space-y-4">
+      {/* Bottom Section - Controls and Analysis */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Left Column - Controls */}
+        <div className="col-span-4 space-y-6">
           {/* Joint Configuration */}
-          <Card className="flex flex-col space-y-3 col-span-2">
-            <CardContent className="p-2 flex-1">
-              <CardTitle className="py-2 text-mm text-center">Joint Configuration</CardTitle>
+          <Card className="shadow-md">
+            <CardContent className="p-4">
+              <CardTitle className="text-lg mb-4">Joint Configuration</CardTitle>
               <CardDescription className="pb-3">Select the type of joint for analysis</CardDescription>
               <div className="grid grid-cols-2 gap-4">
                 <Select value={jointType} onValueChange={setJointType}>
@@ -942,9 +974,9 @@ const handleDeleteROI = (isFirst: boolean) => {
           </Card>
 
           {/* Weld Parameters */}
-          <Card className="flex flex-col space-y-3 col-span-2">
-            <CardContent className="p-2 flex-1">
-              <CardTitle className="py-2 text-mm text-center">Weld Parameters</CardTitle>
+          <Card className="shadow-md">
+            <CardContent className="p-4">
+              <CardTitle className="text-lg mb-4">Weld Parameters</CardTitle>
               <CardDescription className='pb-3'>Configure welding parameters for analysis</CardDescription>
               <div className="grid grid-cols-2 gap-4">
                 {weldParameters.map((param: WeldParameter) => (
@@ -975,81 +1007,88 @@ const handleDeleteROI = (isFirst: boolean) => {
             </CardContent>
           </Card>
         </div>
-        {/* Right Column - Analysis Outputs */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* ROI Output */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-0 pt-3 px-2">
-              <CardTitle className="text-sm text-center">ROI Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="grid grid-cols-2 gap-2 h-full">
-                <div className="h-full bg-red-100 rounded-lg overflow-hidden">
-                  {roiAnalysis.roi1Image ? (
-                    <img 
-                      src={roiAnalysis.roi1Image} 
-                      alt="ROI 1" 
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <span className="text-sm text-red-500">No ROI selected</span>
-                    </div>
-                  )}
-                </div>
-                <div className="h-full bg-red-100 rounded-lg overflow-hidden">
-                  {roiAnalysis.roi2Image ? (
-                    <img 
-                      src={roiAnalysis.roi2Image} 
-                      alt="ROI 2" 
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <span className="text-sm text-red-500">No ROI selected</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Canny Output */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-0 pt-3 px-2">
-              <CardTitle className="text-sm text-center">Canny Edge Detection</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="h-full bg-red-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-  
-          {/* Joint Analysis */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-0 pt-3 px-2">
-              <CardTitle className="text-sm text-center">Joint Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="h-full bg-red-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-  
-          {/* LOWESS Output */}
-          <Card className="flex flex-col h-64">
-            <CardHeader className="p-0 pt-3 px-2">
-              <CardTitle className="text-sm text-center">LOWESS Visualization</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-1">
-              <div className="h-full bg-red-100 rounded-lg"></div>
-            </CardContent>
-          </Card>
-        </div>
 
+        {/* Right Column - Analysis Outputs */}
+        <div className="col-span-8 space-y-6">
+          {/* Top Row */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* ROI Analysis */}
+            <Card className="shadow-md">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-lg">ROI Analysis</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 gap-3 h-full">
+                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border">
+                    {roiAnalysis.roi1Image ? (
+                      <img 
+                        src={roiAnalysis.roi1Image} 
+                        alt="ROI 1" 
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">No ROI selected</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border">
+                    {roiAnalysis.roi2Image ? (
+                      <img 
+                        src={roiAnalysis.roi2Image} 
+                        alt="ROI 2" 
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">No ROI selected</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Canny Edge Detection */}
+            <Card className="shadow-md">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-lg">Edge Detection</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="aspect-video bg-muted rounded-lg"></div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Bottom Row */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Joint Analysis */}
+            <Card className="shadow-md">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-lg">Joint Analysis</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="aspect-video bg-muted rounded-lg"></div>
+              </CardContent>
+            </Card>
+
+            {/* LOWESS Visualization */}
+            <Card className="shadow-md">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-lg">LOWESS Analysis</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="aspect-video bg-muted rounded-lg"></div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
   
+      {/* Error Alert */}
       {error && (
-        <Alert variant="destructive" className="fixed bottom-4 right-4">
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="fixed bottom-4 right-4 max-w-md animate-in slide-in-from-bottom-2">
+          <AlertDescription className="text-sm">{error}</AlertDescription>
         </Alert>
       )}
     </div>
