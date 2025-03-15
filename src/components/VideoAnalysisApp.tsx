@@ -1364,21 +1364,21 @@ const handleDeleteROI = (isFirst: boolean) => {
         
         {/* Page Header */}
         <div className="space-y-2 mb-8">
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Weld Analysis Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">Weld Analysis Dashboard</h1>
           <p className="text-muted-foreground max-w-3xl">
             Real-time monitoring and analysis of welding processes using dual camera feeds with advanced edge detection.
           </p>
-          <div className="h-1 w-32 bg-gradient-to-r from-primary to-primary/30 rounded-full mt-2"></div>
+          <div className="h-1.5 w-40 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full mt-2"></div>
         </div>
 
         {/* Top Row - Camera Feeds */}
         <div className="grid grid-cols-2 gap-8">
           {/* First Video Feed */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden">
-            <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-muted/30">
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-blue-950/5">
+            <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-blue-900/10">
               <CardTitle className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <span className="font-semibold text-lg">Depth Camera Feed</span>
+                  <span className="font-semibold text-lg text-blue-600">Depth Camera Feed</span>
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
@@ -1541,12 +1541,12 @@ const handleDeleteROI = (isFirst: boolean) => {
                   </div>
                 )}
                 {!isStreaming && !importedImage1 && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/30 backdrop-blur-sm">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                      <Play className="h-8 w-8 text-primary/70" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm">
+                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                      <Play className="h-8 w-8 text-blue-500" />
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground">Click play to start camera</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">or import an image for analysis</p>
+                    <p className="text-sm font-medium text-blue-700">Click play to start camera</p>
+                    <p className="text-xs text-blue-500 mt-1">or import an image for analysis</p>
                   </div>
                 )}
               </div>
@@ -1554,11 +1554,11 @@ const handleDeleteROI = (isFirst: boolean) => {
           </Card>
     
           {/* Second Video Feed */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden">
-            <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-muted/30">
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-indigo-950/5">
+            <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-indigo-900/10">
               <CardTitle className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <span className="font-semibold text-lg">Weld Camera Feed</span>
+                  <span className="font-semibold text-lg text-indigo-600">Weld Camera Feed</span>
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
@@ -1721,12 +1721,12 @@ const handleDeleteROI = (isFirst: boolean) => {
                   </div>
                 )}
                 {!isStream2Active && !importedImage2 && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/30 backdrop-blur-sm">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                      <Play className="h-8 w-8 text-primary/70" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50/80 to-purple-50/80 backdrop-blur-sm">
+                    <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-3">
+                      <Play className="h-8 w-8 text-indigo-500" />
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground">Click play to start camera</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">or import an image for analysis</p>
+                    <p className="text-sm font-medium text-indigo-700">Click play to start camera</p>
+                    <p className="text-xs text-indigo-500 mt-1">or import an image for analysis</p>
                   </div>
                 )}
               </div>
@@ -1739,10 +1739,10 @@ const handleDeleteROI = (isFirst: boolean) => {
           {/* Left Column - ROI Analysis */}
           <div className="col-span-4 space-y-6">
             {/* ROI Analysis */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden">
-              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-muted/30">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-purple-950/5">
+              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-purple-900/10">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">ROI Analysis</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-purple-600">ROI Analysis</CardTitle>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
@@ -1757,7 +1757,7 @@ const handleDeleteROI = (isFirst: boolean) => {
               </CardHeader>
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 gap-3 h-full">
-                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border/50 hover:border-primary/50 transition-all duration-300 shadow-inner">
+                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border/50 hover:border-purple-400 transition-all duration-300 shadow-inner">
                     {roiAnalysis.roi1Image ? (
                       <img 
                         src={roiAnalysis.roi1Image} 
@@ -1765,16 +1765,16 @@ const handleDeleteROI = (isFirst: boolean) => {
                         className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                       />
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center p-4">
-                        <div className="w-12 h-12 rounded-full bg-muted-foreground/10 flex items-center justify-center mb-2">
-                          <Square className="h-6 w-6 text-muted-foreground/40" />
+                      <div className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50/50">
+                        <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                          <Square className="h-6 w-6 text-purple-400" />
                         </div>
-                        <span className="text-sm text-muted-foreground text-center">No ROI selected</span>
-                        <span className="text-xs text-muted-foreground/70 mt-1 text-center">Use the square tool to select a region</span>
+                        <span className="text-sm text-purple-700 text-center">No ROI selected</span>
+                        <span className="text-xs text-purple-500 mt-1 text-center">Use the square tool to select a region</span>
                       </div>
                     )}
                   </div>
-                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border/50 hover:border-primary/50 transition-all duration-300 shadow-inner">
+                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border/50 hover:border-purple-400 transition-all duration-300 shadow-inner">
                     {roiAnalysis.roi2Image ? (
                       <img 
                         src={roiAnalysis.roi2Image} 
@@ -1782,19 +1782,19 @@ const handleDeleteROI = (isFirst: boolean) => {
                         className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                       />
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center p-4">
-                        <div className="w-12 h-12 rounded-full bg-muted-foreground/10 flex items-center justify-center mb-2">
-                          <Square className="h-6 w-6 text-muted-foreground/40" />
+                      <div className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50/50">
+                        <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                          <Square className="h-6 w-6 text-purple-400" />
                         </div>
-                        <span className="text-sm text-muted-foreground text-center">No ROI selected</span>
-                        <span className="text-xs text-muted-foreground/70 mt-1 text-center">Use the square tool to select a region</span>
+                        <span className="text-sm text-purple-700 text-center">No ROI selected</span>
+                        <span className="text-xs text-purple-500 mt-1 text-center">Use the square tool to select a region</span>
                       </div>
                     )}
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button 
-                    className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300" 
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg" 
                     onClick={handleAnalyze}
                     disabled={isAnalyzing || (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image)}
                   >
@@ -1808,7 +1808,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                     )}
                   </Button>
                   <Button 
-                    className="w-full transition-all duration-300 border-primary/30 hover:border-primary/60 hover:bg-primary/5" 
+                    className="w-full transition-all duration-300 border-indigo-300 hover:border-indigo-400 hover:bg-indigo-50/30 text-indigo-700" 
                     onClick={runEdgeDetection}
                     disabled={isRunningEdgeDetection || (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image)}
                     variant="outline"
@@ -1827,13 +1827,13 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
 
             {/* Joint Configuration */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-green-950/5">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-primary rounded-full mr-2"></div>
-                      Joint Configuration
+                      <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-full mr-2"></div>
+                      <span className="text-green-700">Joint Configuration</span>
                     </div>
                   </CardTitle>
                   <HoverCard>
@@ -1876,9 +1876,9 @@ const handleDeleteROI = (isFirst: boolean) => {
                     </SelectContent>
                   </Select>
                   <div className="flex items-center justify-end">
-                    <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+                    <div className="px-3 py-1.5 rounded-md bg-green-100 border border-green-200">
                       <span className="text-sm">
-                        Selected: <span className="font-medium capitalize text-primary">
+                        Selected: <span className="font-medium capitalize text-green-700">
                           {jointTypes.find(t => t.id === jointType)?.name || jointType}
                         </span>
                       </span>
@@ -1889,13 +1889,13 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
 
             {/* Weld Parameters */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-amber-950/5">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-primary rounded-full mr-2"></div>
-                      Weld Parameters
+                      <div className="w-1 h-6 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full mr-2"></div>
+                      <span className="text-amber-700">Weld Parameters</span>
                     </div>
                   </CardTitle>
                   <HoverCard>
@@ -1959,13 +1959,13 @@ const handleDeleteROI = (isFirst: boolean) => {
           {/* Right Column - Analysis Visualizations */}
           <div className="col-span-8 grid grid-cols-2 gap-8">
             {/* Edge Detection */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden">
-              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-muted/30">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-red-950/5">
+              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-red-900/10">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-primary rounded-full mr-2"></div>
-                      Edge Detection
+                      <div className="w-1 h-6 bg-gradient-to-b from-red-500 to-rose-600 rounded-full mr-2"></div>
+                      <span className="text-red-600">Edge Detection</span>
                     </div>
                   </CardTitle>
                   <Tooltip>
@@ -1983,14 +1983,14 @@ const handleDeleteROI = (isFirst: boolean) => {
               <CardContent className="p-4">
                 <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner">
                   {isRunningEdgeDetection ? (
-                    <div className="h-full flex flex-col items-center justify-center">
+                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-rose-50/50">
                       <div className="relative w-16 h-16 mb-3">
-                        <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-red-200 border-t-red-500 animate-spin"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xs font-medium text-primary">Processing</span>
+                          <span className="text-xs font-medium text-red-600">Processing</span>
                         </div>
                       </div>
-                      <span className="text-sm text-muted-foreground animate-pulse">Detecting edges in selected ROI...</span>
+                      <span className="text-sm text-red-700 animate-pulse">Detecting edges in selected ROI...</span>
                     </div>
                   ) : edgeDetectionResult ? (
                     <div className="relative h-full group">
@@ -1999,17 +1999,17 @@ const handleDeleteROI = (isFirst: boolean) => {
                         alt="Edge Detection Result" 
                         className="w-full h-full object-contain transition-all duration-500 group-hover:scale-[1.02]"
                       />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <p className="text-xs text-white/90">Edge detection completed successfully</p>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-red-900/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <p className="text-xs text-white font-medium">Edge detection completed successfully</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-muted-foreground/10 flex items-center justify-center mb-2">
-                        <HelpCircle className="h-8 w-8 text-muted-foreground/50" />
+                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-rose-50/50">
+                      <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-2">
+                        <HelpCircle className="h-8 w-8 text-red-300" />
                       </div>
-                      <span className="text-sm text-muted-foreground">No edge detection results</span>
-                      <span className="text-xs text-muted-foreground/70 mt-1">Select an ROI and click Edge Detection</span>
+                      <span className="text-sm text-red-700">No edge detection results</span>
+                      <span className="text-xs text-red-500 mt-1">Select an ROI and click Edge Detection</span>
                     </div>
                   )}
                 </div>
@@ -2017,13 +2017,13 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
 
             {/* LOWESS Visualization */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden">
-              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-muted/30">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-cyan-950/5">
+              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-cyan-900/10">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-primary rounded-full mr-2"></div>
-                      LOWESS Analysis
+                      <div className="w-1 h-6 bg-gradient-to-b from-cyan-500 to-sky-600 rounded-full mr-2"></div>
+                      <span className="text-cyan-600">LOWESS Analysis</span>
                     </div>
                   </CardTitle>
                   <Tooltip>
@@ -2039,12 +2039,12 @@ const handleDeleteROI = (isFirst: boolean) => {
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 shadow-inner flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-muted-foreground/10 flex items-center justify-center mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/50"><path d="M3 3v18h18"/><path d="M7 12c0-1.7 1.3-3 3-3h4c1.7 0 3 1.3 3 3s-1.3 3-3 3h-4c-1.7 0-3-1.3-3-3z"/></svg>
+                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-cyan-400 transition-all duration-300 shadow-inner flex flex-col items-center justify-center bg-gradient-to-br from-cyan-50 to-sky-50/50">
+                  <div className="w-16 h-16 rounded-full bg-cyan-100 flex items-center justify-center mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400"><path d="M3 3v18h18"/><path d="M7 12c0-1.7 1.3-3 3-3h4c1.7 0 3 1.3 3 3s-1.3 3-3 3h-4c-1.7 0-3-1.3-3-3z"/></svg>
                   </div>
-                  <span className="text-sm text-muted-foreground">LOWESS Analysis</span>
-                  <span className="text-xs text-muted-foreground/70 mt-1">Coming soon</span>
+                  <span className="text-sm text-cyan-700">LOWESS Analysis</span>
+                  <span className="text-xs text-cyan-500 mt-1">Coming soon</span>
                 </div>
               </CardContent>
             </Card>
@@ -2053,9 +2053,9 @@ const handleDeleteROI = (isFirst: boolean) => {
     
         {/* Error Alert */}
         {error && (
-          <Alert variant="destructive" className="fixed bottom-4 right-4 max-w-md animate-in slide-in-from-bottom-2 shadow-lg border border-destructive/20">
-            <AlertDescription className="text-sm flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <Alert variant="destructive" className="fixed bottom-4 right-4 max-w-md animate-in slide-in-from-bottom-2 shadow-lg border border-destructive/20 bg-gradient-to-r from-red-50 to-red-100">
+            <AlertDescription className="text-sm flex items-center text-red-800">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-red-600"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
               {error}
             </AlertDescription>
           </Alert>
@@ -2067,33 +2067,33 @@ const handleDeleteROI = (isFirst: boolean) => {
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAnalysisPopup(false)}></div>
             <div className="bg-background rounded-lg shadow-xl p-6 max-w-md w-full z-10 animate-in fade-in-50 slide-in-from-bottom-10 border border-border/50">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Analysis Result</h3>
+                <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">Analysis Result</h3>
                 <Button variant="ghost" size="icon" onClick={() => setShowAnalysisPopup(false)} className="rounded-full hover:bg-destructive/10">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </Button>
               </div>
               <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg border border-border/50">
-                  <p className="font-medium text-muted-foreground">Predicted Joint Type:</p>
-                  <p className="text-xl font-bold mt-1">{analysisResult.predictedClass}</p>
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                  <p className="font-medium text-blue-800">Predicted Joint Type:</p>
+                  <p className="text-xl font-bold mt-1 text-indigo-700">{analysisResult.predictedClass}</p>
                   {analysisResult.confidence !== null && (
-                    <div className="mt-2 bg-background/50 p-2 rounded">
-                      <p className="text-sm font-medium">Confidence Level:</p>
-                      <div className="w-full bg-muted-foreground/20 rounded-full h-2.5 mt-1">
+                    <div className="mt-2 bg-white/80 p-2 rounded">
+                      <p className="text-sm font-medium text-blue-700">Confidence Level:</p>
+                      <div className="w-full bg-blue-100 rounded-full h-2.5 mt-1">
                         <div 
-                          className="bg-gradient-to-r from-primary/80 to-primary h-2.5 rounded-full" 
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full" 
                           style={{ width: `${(analysisResult.confidence * 100).toFixed(0)}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-right mt-1 text-muted-foreground">
+                      <p className="text-xs text-right mt-1 text-indigo-600 font-medium">
                         {(analysisResult.confidence * 100).toFixed(2)}%
                       </p>
                     </div>
                   )}
                 </div>
-                <div className="flex items-center p-3 bg-primary/10 rounded-lg border border-primary/20">
-                  <Info className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
-                  <p className="text-sm">
+                <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <Info className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+                  <p className="text-sm text-blue-800">
                     The joint type has been automatically updated in the configuration panel.
                   </p>
                 </div>
