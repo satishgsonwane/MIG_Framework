@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
-import { Square, Play, Pause, Trash2, Info, HelpCircle } from 'lucide-react';
+import { Square, Play, Pause, Trash2, Info, HelpCircle, Upload, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Tooltip, 
@@ -67,7 +67,7 @@ const weldParameters: WeldParameter[] = [
     id: 'material',
     name: 'Welding Material',
     unit: '',
-    options: ['Carbon Steel', 'Stainless Steel', 'Aluminum', 'Nickel Alloy']
+    options: ['Mild Steel', 'Stainless Steel', 'Aluminum', 'Nickel Alloy']
   },
   {
     id: 'current',
@@ -162,6 +162,18 @@ const VideoAnalysisApp: React.FC = () => {
   const canvas2Ref = useRef<HTMLCanvasElement>(null);
   // const roiStartRef = useRef<{ x: number; y: number } | null>(null);
 
+  // Add state for imported images
+  const [importedImage1, setImportedImage1] = useState<string | null>(null);
+  const [importedImage2, setImportedImage2] = useState<string | null>(null);
+  
+  // Add refs for file inputs
+  const fileInput1Ref = useRef<HTMLInputElement>(null);
+  const fileInput2Ref = useRef<HTMLInputElement>(null);
+
+  // Create refs for cached images
+  const cachedImage1Ref = useRef<HTMLImageElement | null>(null);
+  const cachedImage2Ref = useRef<HTMLImageElement | null>(null);
+  
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -192,63 +204,228 @@ const VideoAnalysisApp: React.FC = () => {
     };
   }, []);
 
+  // Effect to cache imported images
+  useEffect(() => {
+    if (importedImage1) {
+      const img = document.createElement('img');
+      img.onload = () => {
+        cachedImage1Ref.current = img;
+      };
+      img.src = importedImage1;
+    } else {
+      cachedImage1Ref.current = null;
+    }
+  }, [importedImage1]);
+  
+  useEffect(() => {
+    if (importedImage2) {
+      const img = document.createElement('img');
+      img.onload = () => {
+        cachedImage2Ref.current = img;
+      };
+      img.src = importedImage2;
+    } else {
+      cachedImage2Ref.current = null;
+    }
+  }, [importedImage2]);
+
   const captureROI = (isFirst: boolean) => {
     const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
+    const roiState = isFirst ? roi1State.current : roi2State.current;
     const video = isFirst ? videoRef.current : video2Ref.current;
-    const roi = isFirst ? roi1State.current : roi2State.current;
+    const isVideoActive = isFirst ? isStreaming : isStream2Active;
+    const importedImage = isFirst ? importedImage1 : importedImage2;
+    const cachedImage = isFirst ? cachedImage1Ref.current : cachedImage2Ref.current;
     
-    if (!canvas || !roi || !video) return;
+    if (!canvas || !roiState) return;
     
-    // Create temporary canvas for ROI
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    const mainCtx = canvas.getContext('2d');
-    
-    if (!tempCtx || !mainCtx) return;
+    try {
+      // Create a temporary canvas to capture the ROI
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = roiState.width;
+      tempCanvas.height = roiState.height;
+      
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return;
+      
+      // Draw directly from the source (video or image) to avoid capturing the blue tint
+      if (video && isVideoActive) {
+        // Calculate scale to maintain aspect ratio
+        const scale = Math.min(
+          canvas.width / video.videoWidth,
+          canvas.height / video.videoHeight
+        );
+        
+        // Calculate the position of the video on the canvas
+        const x = (canvas.width - video.videoWidth * scale) / 2;
+        const y = (canvas.height - video.videoHeight * scale) / 2;
+        
+        // Calculate the source coordinates in the video
+        const sourceX = (roiState.x - x) / scale;
+        const sourceY = (roiState.y - y) / scale;
+        const sourceWidth = roiState.width / scale;
+        const sourceHeight = roiState.height / scale;
+        
+        // Draw only the ROI portion from the video
+        tempCtx.drawImage(
+          video,
+          Math.max(0, sourceX), 
+          Math.max(0, sourceY),
+          Math.min(video.videoWidth, sourceWidth),
+          Math.min(video.videoHeight, sourceHeight),
+          0, 0,
+          roiState.width,
+          roiState.height
+        );
+      } else if (importedImage && cachedImage) {
+        // Calculate scale to maintain aspect ratio
+        const scale = Math.min(
+          canvas.width / cachedImage.width,
+          canvas.height / cachedImage.height
+        );
+        
+        // Calculate the position of the image on the canvas
+        const x = (canvas.width - cachedImage.width * scale) / 2;
+        const y = (canvas.height - cachedImage.height * scale) / 2;
+        
+        // Calculate the source coordinates in the image
+        const sourceX = (roiState.x - x) / scale;
+        const sourceY = (roiState.y - y) / scale;
+        const sourceWidth = roiState.width / scale;
+        const sourceHeight = roiState.height / scale;
+        
+        // Draw only the ROI portion from the image
+        tempCtx.drawImage(
+          cachedImage,
+          Math.max(0, sourceX), 
+          Math.max(0, sourceY),
+          Math.min(cachedImage.width, sourceWidth),
+          Math.min(cachedImage.height, sourceHeight),
+          0, 0,
+          roiState.width,
+          roiState.height
+        );
+      }
+      
+      // Convert to data URL
+      const dataUrl = tempCanvas.toDataURL('image/png');
+      
+      // Update ROI analysis state
+      setRoiAnalysis(prev => ({
+        ...prev,
+        [isFirst ? 'roi1Image' : 'roi2Image']: dataUrl
+      }));
+    } catch (err) {
+      console.error('Error capturing ROI:', err);
+      setError('Failed to capture ROI');
+    }
+  };
   
-    // Calculate scale to maintain aspect ratio (same as in processFrame)
-    const scale = Math.min(
-      canvas.width / video.videoWidth,
-      canvas.height / video.videoHeight
-    );
+  // Add function to handle image import
+  const handleImageImport = (isFirst: boolean, event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
     
-    // Calculate centered position
-    const x = (canvas.width - video.videoWidth * scale) / 2;
-    const y = (canvas.height - video.videoHeight * scale) / 2;
-  
-    // Set dimensions to ROI size
-    tempCanvas.width = roi.width;
-    tempCanvas.height = roi.height;
-  
-    // First draw the current video frame to the main canvas
-    mainCtx.drawImage(
-      video,
-      0, 0,
-      video.videoWidth,
-      video.videoHeight,
-      x, y,
-      video.videoWidth * scale,
-      video.videoHeight * scale
-    );
-  
-    // Then capture the ROI portion
-    tempCtx.drawImage(
-      canvas,
-      roi.x, roi.y, roi.width, roi.height,
-      0, 0, roi.width, roi.height
-    );
+    const file = files[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     
-    // Convert to base64
-    const roiImage = tempCanvas.toDataURL('image/png');
+    if (!validTypes.includes(file.type)) {
+      setError('Please select a valid image file (JPEG, PNG, GIF, WEBP)');
+      return;
+    }
     
-    // Update ROI analysis state
-    setRoiAnalysis(prev => ({
-      ...prev,
-      [isFirst ? 'roi1Image' : 'roi2Image']: roiImage
-    }));
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      
+      if (isFirst) {
+        // Stop any active stream
+        if (isStreaming && videoRef.current?.srcObject) {
+          const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+          tracks.forEach(track => track.stop());
+          videoRef.current.srcObject = null;
+          setIsStreaming(false);
+        }
+        
+        // Set imported image state
+        setImportedImage1(result);
+        
+        // Set canvas dimensions to match the standard dimensions
+        if (canvasRef.current) {
+          canvasRef.current.width = CANVAS_WIDTH;
+          canvasRef.current.height = CANVAS_HEIGHT;
+        }
+        
+        // Reset ROI state
+        setRoi1State({ start: null, current: null, isSelecting: false });
+      } else {
+        // Stop any active stream
+        if (isStream2Active && video2Ref.current?.srcObject) {
+          const tracks = (video2Ref.current.srcObject as MediaStream).getTracks();
+          tracks.forEach(track => track.stop());
+          video2Ref.current.srcObject = null;
+          setIsStream2Active(false);
+        }
+        
+        // Set imported image state
+        setImportedImage2(result);
+        
+        // Set canvas dimensions to match the standard dimensions
+        if (canvas2Ref.current) {
+          canvas2Ref.current.width = CANVAS_WIDTH;
+          canvas2Ref.current.height = CANVAS_HEIGHT;
+        }
+        
+        // Reset ROI state
+        setRoi2State({ start: null, current: null, isSelecting: false });
+      }
+      
+      // Reset file input
+      if (isFirst && fileInput1Ref.current) {
+        fileInput1Ref.current.value = '';
+      } else if (!isFirst && fileInput2Ref.current) {
+        fileInput2Ref.current.value = '';
+      }
+    };
+    
+    reader.onerror = () => {
+      setError('Error reading the image file');
+    };
+    
+    reader.readAsDataURL(file);
+  };
+  
+  // Add function to clear imported image
+  const clearImportedImage = (isFirst: boolean) => {
+    if (isFirst) {
+      setImportedImage1(null);
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+      }
+      setRoi1State({ start: null, current: null, isSelecting: false });
+      setRoiAnalysis(prev => ({ ...prev, roi1Image: null }));
+    } else {
+      setImportedImage2(null);
+      if (canvas2Ref.current) {
+        const ctx = canvas2Ref.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas2Ref.current.width, canvas2Ref.current.height);
+        }
+      }
+      setRoi2State({ start: null, current: null, isSelecting: false });
+      setRoiAnalysis(prev => ({ ...prev, roi2Image: null }));
+    }
   };
   
   const toggleStream = async () => {
+    // Clear imported image if exists
+    if (importedImage1) {
+      clearImportedImage(true);
+    }
+    
     if (isStreaming) {
       if (videoRef.current?.srcObject) {
         // Capture the last frame before stopping the stream
@@ -330,6 +507,11 @@ const VideoAnalysisApp: React.FC = () => {
   };
   
   const toggleStream2 = async () => {
+    // Clear imported image if exists
+    if (importedImage2) {
+      clearImportedImage(false);
+    }
+    
     if (isStream2Active) {
       if (video2Ref.current?.srcObject) {
         // Capture the last frame before stopping the stream
@@ -417,56 +599,93 @@ const VideoAnalysisApp: React.FC = () => {
     
     const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
     const video = isFirst ? videoRef.current : video2Ref.current;
-    if (!canvas || !video) return;
+    const importedImage = isFirst ? importedImage1 : importedImage2;
+    
+    if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    // Calculate video display dimensions
-    const scale = Math.min(
-      canvas.width / video.videoWidth,
-      canvas.height / video.videoHeight
-    );
-    const videoDisplayWidth = video.videoWidth * scale;
-    const videoDisplayHeight = video.videoHeight * scale;
-    const xOffset = (canvas.width - videoDisplayWidth) / 2;
-    const yOffset = (canvas.height - videoDisplayHeight) / 2;
-    
-    // Adjust coordinates to account for video position
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-    
-    // Check if click is within video bounds
-    if (x < xOffset || x > xOffset + videoDisplayWidth || 
-        y < yOffset || y > yOffset + videoDisplayHeight) {
-      return;
-    }
+    // For video streams
+    if ((isFirst && isStreaming && video) || (!isFirst && isStream2Active && video)) {
+      // Calculate video display dimensions
+      const scale = Math.min(
+        canvas.width / video.videoWidth,
+        canvas.height / video.videoHeight
+      );
+      const videoDisplayWidth = video.videoWidth * scale;
+      const videoDisplayHeight = video.videoHeight * scale;
+      const xOffset = (canvas.width - videoDisplayWidth) / 2;
+      const yOffset = (canvas.height - videoDisplayHeight) / 2;
+      
+      // Adjust coordinates to account for video position
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      
+      // Check if click is within video bounds
+      if (x < xOffset || x > xOffset + videoDisplayWidth || 
+          y < yOffset || y > yOffset + videoDisplayHeight) {
+        return;
+      }
 
-    const startPoint = { x, y };
-    
-    if (isFirst) {
-      setRoi1State(prev => ({
-        ...prev,
-        start: startPoint,
-        current: {
-          x: startPoint.x,
-          y: startPoint.y,
-          width: 0,
-          height: 0
-        }
-      }));
-    } else {
-      setRoi2State(prev => ({
-        ...prev,
-        start: startPoint,
-        current: {
-          x: startPoint.x,
-          y: startPoint.y,
-          width: 0,
-          height: 0
-        }
-      }));
+      const startPoint = { x, y };
+      
+      if (isFirst) {
+        setRoi1State({
+          start: startPoint,
+          current: {
+            x: startPoint.x,
+            y: startPoint.y,
+            width: 1,
+            height: 1
+          },
+          isSelecting: true
+        });
+      } else {
+        setRoi2State({
+          start: startPoint,
+          current: {
+            x: startPoint.x,
+            y: startPoint.y,
+            width: 1,
+            height: 1
+          },
+          isSelecting: true
+        });
+      }
+    }
+    // For imported images
+    else if (importedImage) {
+      // Get coordinates within canvas
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      
+      const startPoint = { x, y };
+      
+      if (isFirst) {
+        setRoi1State({
+          start: startPoint,
+          current: {
+            x: startPoint.x,
+            y: startPoint.y,
+            width: 1,
+            height: 1
+          },
+          isSelecting: true
+        });
+      } else {
+        setRoi2State({
+          start: startPoint,
+          current: {
+            x: startPoint.x,
+            y: startPoint.y,
+            width: 1,
+            height: 1
+          },
+          isSelecting: true
+        });
+      }
     }
   };
   
@@ -476,39 +695,77 @@ const VideoAnalysisApp: React.FC = () => {
   
     const canvas = isFirst ? canvasRef.current : canvas2Ref.current;
     const video = isFirst ? videoRef.current : video2Ref.current;
-    if (!canvas || !video) return;
+    const importedImage = isFirst ? importedImage1 : importedImage2;
+    
+    if (!canvas) return;
   
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    // Calculate video display dimensions
-    const scale = Math.min(
-      canvas.width / video.videoWidth,
-      canvas.height / video.videoHeight
-    );
-    const videoDisplayWidth = video.videoWidth * scale;
-    const videoDisplayHeight = video.videoHeight * scale;
-    const xOffset = (canvas.width - videoDisplayWidth) / 2;
-    const yOffset = (canvas.height - videoDisplayHeight) / 2;
-    
-    const currentX = Math.max(xOffset, Math.min((e.clientX - rect.left) * scaleX, xOffset + videoDisplayWidth));
-    const currentY = Math.max(yOffset, Math.min((e.clientY - rect.top) * scaleY, yOffset + videoDisplayHeight));
+    // For video streams
+    if ((isFirst && isStreaming && video) || (!isFirst && isStream2Active && video)) {
+      // Calculate video display dimensions
+      const scale = Math.min(
+        canvas.width / video.videoWidth,
+        canvas.height / video.videoHeight
+      );
+      const videoDisplayWidth = video.videoWidth * scale;
+      const videoDisplayHeight = video.videoHeight * scale;
+      const xOffset = (canvas.width - videoDisplayWidth) / 2;
+      const yOffset = (canvas.height - videoDisplayHeight) / 2;
+      
+      const currentX = Math.max(xOffset, Math.min((e.clientX - rect.left) * scaleX, xOffset + videoDisplayWidth));
+      const currentY = Math.max(yOffset, Math.min((e.clientY - rect.top) * scaleY, yOffset + videoDisplayHeight));
 
-    const newROI = {
-      x: Math.min(roiState.start.x, currentX),
-      y: Math.min(roiState.start.y, currentY),
-      width: Math.abs(currentX - roiState.start.x),
-      height: Math.abs(currentY - roiState.start.y)
-    };
-  
-    if (isFirst) {
-      setRoi1State(prev => ({ ...prev, current: newROI }));
-    } else {
-      setRoi2State(prev => ({ ...prev, current: newROI }));
+      // Calculate width and height based on start and current position
+      const width = Math.abs(currentX - roiState.start.x);
+      const height = Math.abs(currentY - roiState.start.y);
+      
+      // Calculate top-left corner of the rectangle
+      const x = Math.min(roiState.start.x, currentX);
+      const y = Math.min(roiState.start.y, currentY);
+
+      const newROI = {
+        x,
+        y,
+        width,
+        height
+      };
+    
+      if (isFirst) {
+        setRoi1State(prev => ({ ...prev, current: newROI }));
+      } else {
+        setRoi2State(prev => ({ ...prev, current: newROI }));
+      }
     }
-  
-    drawROI(canvas, newROI);
+    // For imported images
+    else if (importedImage) {
+      // Get coordinates within canvas with bounds checking
+      const currentX = Math.max(0, Math.min((e.clientX - rect.left) * scaleX, canvas.width));
+      const currentY = Math.max(0, Math.min((e.clientY - rect.top) * scaleY, canvas.height));
+
+      // Calculate width and height based on start and current position
+      const width = Math.abs(currentX - roiState.start.x);
+      const height = Math.abs(currentY - roiState.start.y);
+      
+      // Calculate top-left corner of the rectangle
+      const x = Math.min(roiState.start.x, currentX);
+      const y = Math.min(roiState.start.y, currentY);
+
+      const newROI = {
+        x,
+        y,
+        width,
+        height
+      };
+    
+      if (isFirst) {
+        setRoi1State(prev => ({ ...prev, current: newROI }));
+      } else {
+        setRoi2State(prev => ({ ...prev, current: newROI }));
+      }
+    }
   };
   
   const handleCanvasMouseUp = (e: React.MouseEvent<HTMLCanvasElement>, isFirst: boolean) => {
@@ -614,189 +871,257 @@ const handleDeleteROI = (isFirst: boolean) => {
     });
   };
 
-  // Frame processing function
+  // Process video frame
   const processFrame = () => {
-  // Process first video feed
-  if (videoRef.current && canvasRef.current && isStreaming) {
-    const ctx = canvasRef.current.getContext('2d', {
-      alpha: false,
-      desynchronized: true
-    });
-    
-    if (ctx) {
-      // Clear the canvas first to prevent artifacts
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      
-      // Calculate scale to maintain aspect ratio
-      const scale = Math.min(
-        canvasRef.current.width / videoRef.current.videoWidth,
-        canvasRef.current.height / videoRef.current.videoHeight
-      );
-      
-      // Center the video in canvas
-      const x = (canvasRef.current.width - videoRef.current.videoWidth * scale) / 2;
-      const y = (canvasRef.current.height - videoRef.current.videoHeight * scale) / 2;
-
-      // Draw video frame
-      ctx.drawImage(
-        videoRef.current,
-        0, 0,
-        videoRef.current.videoWidth,
-        videoRef.current.videoHeight,
-        x, y,
-        videoRef.current.videoWidth * scale,
-        videoRef.current.videoHeight * scale
-      );
-
-      // Draw ROI if exists and is being selected or completed
-      if (roi1State.isSelecting && roi1State.current) {
-        ctx.setLineDash([6]);
-        ctx.strokeStyle = '#3B82F6';
-        ctx.lineWidth = 3;
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
-        ctx.fillRect(
-          roi1State.current.x,
-          roi1State.current.y,
-          roi1State.current.width,
-          roi1State.current.height
-        );
-        ctx.strokeRect(
-          roi1State.current.x,
-          roi1State.current.y,
-          roi1State.current.width,
-          roi1State.current.height
-        );
-      } else if (!roi1State.isSelecting && roi1State.current) {
-        // Draw completed ROI
-        ctx.setLineDash([]);
-        ctx.strokeStyle = '#2563EB';
-        ctx.lineWidth = 2;
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
-        ctx.fillRect(
-          roi1State.current.x,
-          roi1State.current.y,
-          roi1State.current.width,
-          roi1State.current.height
-        );
-        ctx.strokeRect(
-          roi1State.current.x,
-          roi1State.current.y,
-          roi1State.current.width,
-          roi1State.current.height
-        );
+    // Process first video/image
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        
+        // Draw video frame or imported image
+        if (videoRef.current && isStreaming) {
+          // Draw video frame
+          const video = videoRef.current;
+          
+          // Calculate scale to maintain aspect ratio
+          const scale = Math.min(
+            canvasRef.current.width / video.videoWidth,
+            canvasRef.current.height / video.videoHeight
+          );
+          
+          // Center the video in canvas
+          const x = (canvasRef.current.width - video.videoWidth * scale) / 2;
+          const y = (canvasRef.current.height - video.videoHeight * scale) / 2;
+          
+          ctx.drawImage(
+            video,
+            0, 0,
+            video.videoWidth,
+            video.videoHeight,
+            x, y,
+            video.videoWidth * scale,
+            video.videoHeight * scale
+          );
+        } else if (importedImage1 && cachedImage1Ref.current) {
+          // Draw imported image
+          const img = cachedImage1Ref.current;
+          
+          // Calculate scale to maintain aspect ratio
+          const scale = Math.min(
+            canvasRef.current.width / img.width,
+            canvasRef.current.height / img.height
+          );
+          
+          // Center the image in canvas
+          const x = (canvasRef.current.width - img.width * scale) / 2;
+          const y = (canvasRef.current.height - img.height * scale) / 2;
+          
+          // Draw image at high quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(
+            img,
+            0, 0,
+            img.width,
+            img.height,
+            x, y,
+            img.width * scale,
+            img.height * scale
+          );
+        }
+        
+        // Draw ROI if selecting or selected
+        if (roi1State.isSelecting && roi1State.start && roi1State.current) {
+          // Draw rectangle for ROI selection
+          ctx.setLineDash([6]);
+          ctx.strokeStyle = '#3B82F6'; // Blue color
+          ctx.lineWidth = 2;
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.2)'; // Semi-transparent blue
+          
+          // Fill the rectangle
+          ctx.fillRect(
+            roi1State.current.x,
+            roi1State.current.y,
+            roi1State.current.width,
+            roi1State.current.height
+          );
+          
+          // Draw the border
+          ctx.strokeRect(
+            roi1State.current.x,
+            roi1State.current.y,
+            roi1State.current.width,
+            roi1State.current.height
+          );
+          
+          // Reset line dash
+          ctx.setLineDash([]);
+        } else if (roi1State.current && !roi1State.isSelecting) {
+          // Draw completed ROI
+          ctx.setLineDash([]);
+          ctx.strokeStyle = '#2563EB'; // Darker blue
+          ctx.lineWidth = 2;
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.1)'; // Very light blue
+          
+          // Fill the rectangle
+          ctx.fillRect(
+            roi1State.current.x,
+            roi1State.current.y,
+            roi1State.current.width,
+            roi1State.current.height
+          );
+          
+          // Draw the border
+          ctx.strokeRect(
+            roi1State.current.x,
+            roi1State.current.y,
+            roi1State.current.width,
+            roi1State.current.height
+          );
+        }
       }
     }
-  }
-
-  // Process second video feed
-  if (video2Ref.current && canvas2Ref.current && isStream2Active) {
-    const ctx = canvas2Ref.current.getContext('2d', {
-      alpha: false,
-      desynchronized: true
-    });
     
-    if (ctx) {
-      // Clear the canvas first to prevent artifacts
-      ctx.clearRect(0, 0, canvas2Ref.current.width, canvas2Ref.current.height);
-      
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      
-      // Calculate scale to maintain aspect ratio
-      const scale = Math.min(
-        canvas2Ref.current.width / video2Ref.current.videoWidth,
-        canvas2Ref.current.height / video2Ref.current.videoHeight
-      );
-      
-      // Center the video in canvas
-      const x = (canvas2Ref.current.width - video2Ref.current.videoWidth * scale) / 2;
-      const y = (canvas2Ref.current.height - video2Ref.current.videoHeight * scale) / 2;
-
-      // Draw video frame
-      ctx.drawImage(
-        video2Ref.current,
-        0, 0,
-        video2Ref.current.videoWidth,
-        video2Ref.current.videoHeight,
-        x, y,
-        video2Ref.current.videoWidth * scale,
-        video2Ref.current.videoHeight * scale
-      );
-
-      // Draw ROI if exists and is being selected or completed
-      if (roi2State.isSelecting && roi2State.current) {
-        ctx.setLineDash([6]);
-        ctx.strokeStyle = '#3B82F6';
-        ctx.lineWidth = 3;
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
-        ctx.fillRect(
-          roi2State.current.x,
-          roi2State.current.y,
-          roi2State.current.width,
-          roi2State.current.height
-        );
-        ctx.strokeRect(
-          roi2State.current.x,
-          roi2State.current.y,
-          roi2State.current.width,
-          roi2State.current.height
-        );
-      } else if (!roi2State.isSelecting && roi2State.current) {
-        // Draw completed ROI
-        ctx.setLineDash([]);
-        ctx.strokeStyle = '#2563EB';
-        ctx.lineWidth = 2;
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
-        ctx.fillRect(
-          roi2State.current.x,
-          roi2State.current.y,
-          roi2State.current.width,
-          roi2State.current.height
-        );
-        ctx.strokeRect(
-          roi2State.current.x,
-          roi2State.current.y,
-          roi2State.current.width,
-          roi2State.current.height
-        );
+    // Process second video/image
+    if (canvas2Ref.current) {
+      const ctx = canvas2Ref.current.getContext('2d');
+      if (ctx) {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas2Ref.current.width, canvas2Ref.current.height);
+        
+        // Draw video frame or imported image
+        if (video2Ref.current && isStream2Active) {
+          // Draw video frame
+          const video = video2Ref.current;
+          
+          // Calculate scale to maintain aspect ratio
+          const scale = Math.min(
+            canvas2Ref.current.width / video.videoWidth,
+            canvas2Ref.current.height / video.videoHeight
+          );
+          
+          // Center the video in canvas
+          const x = (canvas2Ref.current.width - video.videoWidth * scale) / 2;
+          const y = (canvas2Ref.current.height - video.videoHeight * scale) / 2;
+          
+          ctx.drawImage(
+            video,
+            0, 0,
+            video.videoWidth,
+            video.videoHeight,
+            x, y,
+            video.videoWidth * scale,
+            video.videoHeight * scale
+          );
+        } else if (importedImage2 && cachedImage2Ref.current) {
+          // Draw imported image
+          const img = cachedImage2Ref.current;
+          
+          // Calculate scale to maintain aspect ratio
+          const scale = Math.min(
+            canvas2Ref.current.width / img.width,
+            canvas2Ref.current.height / img.height
+          );
+          
+          // Center the image in canvas
+          const x = (canvas2Ref.current.width - img.width * scale) / 2;
+          const y = (canvas2Ref.current.height - img.height * scale) / 2;
+          
+          // Draw image at high quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(
+            img,
+            0, 0,
+            img.width,
+            img.height,
+            x, y,
+            img.width * scale,
+            img.height * scale
+          );
+        }
+        
+        // Draw ROI if selecting or selected
+        if (roi2State.isSelecting && roi2State.start && roi2State.current) {
+          // Draw rectangle for ROI selection
+          ctx.setLineDash([6]);
+          ctx.strokeStyle = '#3B82F6'; // Blue color
+          ctx.lineWidth = 2;
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.2)'; // Semi-transparent blue
+          
+          // Fill the rectangle
+          ctx.fillRect(
+            roi2State.current.x,
+            roi2State.current.y,
+            roi2State.current.width,
+            roi2State.current.height
+          );
+          
+          // Draw the border
+          ctx.strokeRect(
+            roi2State.current.x,
+            roi2State.current.y,
+            roi2State.current.width,
+            roi2State.current.height
+          );
+          
+          // Reset line dash
+          ctx.setLineDash([]);
+        } else if (roi2State.current && !roi2State.isSelecting) {
+          // Draw completed ROI
+          ctx.setLineDash([]);
+          ctx.strokeStyle = '#2563EB'; // Darker blue
+          ctx.lineWidth = 2;
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.1)'; // Very light blue
+          
+          // Fill the rectangle
+          ctx.fillRect(
+            roi2State.current.x,
+            roi2State.current.y,
+            roi2State.current.width,
+            roi2State.current.height
+          );
+          
+          // Draw the border
+          ctx.strokeRect(
+            roi2State.current.x,
+            roi2State.current.y,
+            roi2State.current.width,
+            roi2State.current.height
+          );
+        }
       }
     }
-  }
+  };
 
-  // Continue animation if either stream is active
-  if (isStreaming || isStream2Active) {
-    const frameId = requestAnimationFrame(processFrame);
-    setAnimationFrame(frameId);
-  }
-};
-  // Effect for frame processing
+  // Set up animation frame for video processing
   useEffect(() => {
-    // Only start animation frame if streaming
-    if (isStreaming || isStream2Active) {
-      // Cancel any existing animation frame first to prevent duplicates
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
+    let animationFrameId: number | undefined = undefined;
+    
+    // Start animation frame if streaming or if we have imported images
+    if ((isStreaming || isStream2Active || importedImage1 || importedImage2) && 
+        (canvasRef.current || canvas2Ref.current)) {
+      // Cancel any existing animation frame
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
       
-      const frameId = requestAnimationFrame(processFrame);
-      setAnimationFrame(frameId);
-    } else {
-      // If not streaming, cancel any existing animation frame
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-        setAnimationFrame(null);
-      }
+      const animate = () => {
+        processFrame();
+        animationFrameId = requestAnimationFrame(animate);
+      };
+      
+      animationFrameId = requestAnimationFrame(animate);
     }
-  
+    
     return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [isStreaming, isStream2Active, roi1State, roi2State]); // Add ROI states as dependencies
+  }, [isStreaming, isStream2Active, importedImage1, importedImage2, roi1State, roi2State]);
 
   // Cleanup effect
   useEffect(() => {
@@ -843,6 +1168,22 @@ const handleDeleteROI = (isFirst: boolean) => {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background p-6 space-y-6">
+        {/* Hidden file inputs */}
+        <input 
+          type="file" 
+          ref={fileInput1Ref} 
+          className="hidden" 
+          accept="image/*" 
+          onChange={(e) => handleImageImport(true, e)} 
+        />
+        <input 
+          type="file" 
+          ref={fileInput2Ref} 
+          className="hidden" 
+          accept="image/*" 
+          onChange={(e) => handleImageImport(false, e)} 
+        />
+        
         {/* Page Header */}
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Weld Analysis Dashboard</h1>
@@ -921,6 +1262,21 @@ const handleDeleteROI = (isFirst: boolean) => {
                       <Button 
                         variant="outline" 
                         size="icon"
+                        onClick={() => fileInput1Ref.current?.click()}
+                        className="hover:bg-primary/10 transition-colors"
+                      >
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Import image for analysis</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
                         onClick={() => setRoi1State(prev => ({ ...prev, isSelecting: !prev.isSelecting }))}
                         className={cn(
                           "transition-colors",
@@ -943,7 +1299,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                         variant="outline"
                         size="icon"
                         onClick={toggleStream}
-                        disabled={isLoading}
+                        disabled={isLoading || importedImage1 !== null}
                         className="hover:bg-primary/10 transition-colors"
                       >
                         {isLoading ? (
@@ -956,7 +1312,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{isStreaming ? "Pause camera" : "Start camera"}</p>
+                      <p>{importedImage1 !== null ? "Clear imported image first" : isStreaming ? "Pause camera" : "Start camera"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -969,7 +1325,10 @@ const handleDeleteROI = (isFirst: boolean) => {
                   autoPlay
                   playsInline
                   muted
-                  className="absolute inset-0 w-full h-full object-cover bg-muted"
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover bg-muted",
+                    importedImage1 ? "hidden" : "block"
+                  )}
                   style={{ objectFit: 'cover' }}
                 />
                 <canvas
@@ -980,6 +1339,25 @@ const handleDeleteROI = (isFirst: boolean) => {
                   onMouseUp={(e) => handleCanvasMouseUp(e, true)}
                   onMouseLeave={() => handleCanvasMouseLeave(true)}
                 />
+                {importedImage1 && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => clearImportedImage(true)}
+                          className="bg-background/80 hover:bg-background transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Clear imported image</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1052,6 +1430,21 @@ const handleDeleteROI = (isFirst: boolean) => {
                       <Button 
                         variant="outline" 
                         size="icon"
+                        onClick={() => fileInput2Ref.current?.click()}
+                        className="hover:bg-primary/10 transition-colors"
+                      >
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Import image for analysis</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
                         onClick={() => setRoi2State(prev => ({ ...prev, isSelecting: !prev.isSelecting }))}
                         className={cn(
                           "transition-colors",
@@ -1074,7 +1467,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                         variant="outline"
                         size="icon"
                         onClick={toggleStream2}
-                        disabled={isLoading}
+                        disabled={isLoading || importedImage2 !== null}
                         className="hover:bg-primary/10 transition-colors"
                       >
                         {isLoading ? (
@@ -1087,7 +1480,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{isStream2Active ? "Pause camera" : "Start camera"}</p>
+                      <p>{importedImage2 !== null ? "Clear imported image first" : isStream2Active ? "Pause camera" : "Start camera"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -1100,17 +1493,39 @@ const handleDeleteROI = (isFirst: boolean) => {
                   autoPlay
                   playsInline
                   muted
-                  className="absolute inset-0 w-full h-full object-cover bg-muted"
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover bg-muted",
+                    importedImage2 ? "hidden" : "block"
+                  )}
                   style={{ objectFit: 'cover' }}
                 />
-                  <canvas
-                    ref={canvas2Ref}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    onMouseDown={(e) => handleCanvasMouseDown(e, false)}
-                    onMouseMove={(e) => handleCanvasMouseMove(e, false)}
-                    onMouseUp={(e) => handleCanvasMouseUp(e, false)}
-                    onMouseLeave={() => handleCanvasMouseLeave(false)}
-                  />
+                <canvas
+                  ref={canvas2Ref}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onMouseDown={(e) => handleCanvasMouseDown(e, false)}
+                  onMouseMove={(e) => handleCanvasMouseMove(e, false)}
+                  onMouseUp={(e) => handleCanvasMouseUp(e, false)}
+                  onMouseLeave={() => handleCanvasMouseLeave(false)}
+                />
+                {importedImage2 && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => clearImportedImage(false)}
+                          className="bg-background/80 hover:bg-background transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Clear imported image</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
