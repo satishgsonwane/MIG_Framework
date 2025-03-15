@@ -7,7 +7,7 @@ python -m venv weld_env
 # You should now see (weld_env) at the beginning of your PowerShell prompt
 
 # Install required packages
-pip install torch torchvision scikit-learn matplotlib seaborn joblib pillow opencv-python
+pip install torch torchvision scikit-learn matplotlib seaborn joblib pillow opencv-python onnxruntime
 
 python weld_prediction.py --image path/to/image.jpg --visualize
 

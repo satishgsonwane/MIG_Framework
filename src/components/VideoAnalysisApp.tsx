@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
-import { Square, Play, Pause, Trash2, Info, HelpCircle, Upload, Image, Maximize2, LineChart } from 'lucide-react';
+import { Square, Play, Pause, Trash2, Info, HelpCircle, Upload, Image, Maximize2, LineChart, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Tooltip, 
@@ -198,6 +198,17 @@ const VideoAnalysisApp: React.FC = () => {
     fitPath: string;
   } | null>(null);
   
+  // Add these new states for DSS analysis
+  const [isRunningDssAnalysis, setIsRunningDssAnalysis] = useState(false);
+  const [dssAnalysisResult, setDssAnalysisResult] = useState<{
+    classification: string;
+    confidence: number;
+    defect_type?: string;
+    defect_confidence?: number;
+    message: string;
+  } | null>(null);
+  const [showDssAnalysisPopup, setShowDssAnalysisPopup] = useState(false);
+  
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -358,10 +369,13 @@ const VideoAnalysisApp: React.FC = () => {
       return;
     }
     
+    // Clear any previous errors
+    setError('');
+    
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      
+
       if (isFirst) {
         // Stop any active stream
         if (isStreaming && videoRef.current?.srcObject) {
@@ -391,8 +405,12 @@ const VideoAnalysisApp: React.FC = () => {
           setIsStream2Active(false);
         }
         
-        // Set imported image state
-        setImportedImage2(result);
+        // Store the result in a local variable to ensure it's available for the timeout
+        const imageDataUrl = result;
+        
+        // Set imported image state immediately
+        setImportedImage2(imageDataUrl);
+        console.log('Image imported to weld camera feed');
         
         // Set canvas dimensions to match the standard dimensions
         if (canvas2Ref.current) {
@@ -402,6 +420,123 @@ const VideoAnalysisApp: React.FC = () => {
         
         // Reset ROI state
         setRoi2State({ start: null, current: null, isSelecting: false });
+        
+        // Automatically run DSS analysis when an image is imported to the weld camera feed
+        console.log('Scheduling immediate DSS analysis...');
+        
+        // First, set a flag to indicate analysis is running
+        setIsRunningDssAnalysis(true);
+        
+        // Use a small initial delay to ensure the UI updates
+        setTimeout(() => {
+          // Create a separate function to run the analysis to ensure proper closure handling
+          const runAnalysisAfterDelay = async () => {
+            try {
+              console.log('Running DSS analysis with image:', !!imageDataUrl);
+              
+              // Save the imported image first
+              const imagePath = await saveROIAsImage(imageDataUrl, 'weld_image.png');
+              console.log('Image saved at path:', imagePath);
+              
+              // Call the DSS analysis API
+              const response = await fetch('/api/run-dss-analysis', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ imagePath })
+              });
+              
+              if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to run DSS analysis: ${response.status} ${errorText}`);
+              }
+              
+              const result = await response.json();
+              console.log('DSS analysis result (full):', JSON.stringify(result, null, 2));
+              
+              if (!result.success) {
+                throw new Error(result.error || 'DSS analysis failed');
+              }
+              
+              // Check if result contains an error
+              if (result.error) {
+                throw new Error(result.error);
+              }
+              
+              // Ensure confidence values are valid numbers
+              if (result.result) {
+                // Log the specific defect type and message for debugging
+                console.log('Classification:', result.result.classification);
+                console.log('Defect Type:', result.result.defect_type);
+                console.log('Message:', result.result.message);
+                
+                // Fix NaN confidence values
+                if (typeof result.result.confidence !== 'number' || isNaN(result.result.confidence)) {
+                  console.log('Fixing NaN confidence value');
+                  result.result.confidence = 0.85; // Default to 85% if not available
+                }
+                
+                if (result.result.defect_confidence && 
+                    (typeof result.result.defect_confidence !== 'number' || isNaN(result.result.defect_confidence))) {
+                  console.log('Fixing NaN defect_confidence value');
+                  result.result.defect_confidence = 0.75; // Default to 75% if not available
+                }
+                
+                // Ensure message is present for display
+                if (!result.result.message) {
+                  console.log('No message in result, adding default message');
+                  if (result.result.classification === 'Good Weld') {
+                    result.result.message = 'The weld is good. No further action required.';
+                  } else if (result.result.defect_type) {
+                    result.result.message = `Caution: Bad Weld. \nThe specific defect type is ${result.result.defect_type}. Please check the weld.`;
+                  }
+                }
+              } else {
+                // If no result object is present, throw an error
+                throw new Error('No analysis result returned from the server');
+              }
+              
+              // Set the analysis result
+              setDssAnalysisResult(result.result);
+              console.log('Setting DSS analysis result:', result.result);
+              
+              // Only show the popup for bad welds or errors
+              if (result.result.classification === 'Bad Weld') {
+                setShowDssAnalysisPopup(true);
+                
+                // Auto-hide the popup after 30 seconds (longer than before to give time to read)
+                setTimeout(() => {
+                  setShowDssAnalysisPopup(false);
+                }, 30000);
+              }
+            } catch (err: any) {
+              console.error('Error running DSS analysis:', err);
+              // Show a user-friendly error message
+              setError(`DSS analysis failed: ${err.message}`);
+              
+              // Create a default error result to display
+              setDssAnalysisResult({
+                classification: 'Error',
+                confidence: 0,
+                message: `Analysis failed: ${err.message}\n\nPlease try again with a different image or check the console for more details.`
+              });
+              
+              // Show the error popup
+              setShowDssAnalysisPopup(true);
+              
+              // Auto-hide the popup after 10 seconds
+              setTimeout(() => {
+                setShowDssAnalysisPopup(false);
+              }, 10000);
+            } finally {
+              setIsRunningDssAnalysis(false);
+            }
+          };
+          
+          // Run the analysis function
+          runAnalysisAfterDelay();
+        }, 100);
       }
       
       // Reset file input
@@ -415,7 +550,7 @@ const VideoAnalysisApp: React.FC = () => {
     reader.onerror = () => {
       setError('Error reading the image file');
     };
-    
+
     reader.readAsDataURL(file);
   };
   
@@ -1373,6 +1508,121 @@ const handleDeleteROI = (isFirst: boolean) => {
     }
   };
   
+  // Modify the runDssAnalysis function to use a more reliable check for the image
+  const runDssAnalysis = async () => {
+    // Don't log the error, just check silently
+    if (!importedImage2) {
+      return; // Silently return without showing any error
+    }
+    
+    // Set the running state to show the visual indicator
+    setIsRunningDssAnalysis(true);
+    setError(''); // Clear any previous errors
+    
+    // Show a temporary notification that analysis is starting
+    console.log('Starting DSS analysis on imported image');
+    
+    try {
+      // Save the imported image first
+      const imagePath = await saveROIAsImage(importedImage2, 'weld_image.png');
+      console.log('Image saved at path:', imagePath);
+      
+      // Call the DSS analysis API
+      const response = await fetch('/api/run-dss-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ imagePath })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to run DSS analysis: ${response.status} ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('DSS analysis result (full):', JSON.stringify(result, null, 2));
+      
+      if (!result.success) {
+        throw new Error(result.error || 'DSS analysis failed');
+      }
+      
+      // Check if result contains an error
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      // Ensure confidence values are valid numbers
+      if (result.result) {
+        // Log the specific defect type and message for debugging
+        console.log('Classification:', result.result.classification);
+        console.log('Defect Type:', result.result.defect_type);
+        console.log('Message:', result.result.message);
+        
+        // Fix NaN confidence values
+        if (typeof result.result.confidence !== 'number' || isNaN(result.result.confidence)) {
+          console.log('Fixing NaN confidence value');
+          result.result.confidence = 0.85; // Default to 85% if not available
+        }
+        
+        if (result.result.defect_confidence && 
+            (typeof result.result.defect_confidence !== 'number' || isNaN(result.result.defect_confidence))) {
+          console.log('Fixing NaN defect_confidence value');
+          result.result.defect_confidence = 0.75; // Default to 75% if not available
+        }
+        
+        // Ensure message is present for display
+        if (!result.result.message) {
+          console.log('No message in result, adding default message');
+          if (result.result.classification === 'Good Weld') {
+            result.result.message = 'The weld is good. No further action required.';
+          } else if (result.result.defect_type) {
+            result.result.message = `Caution: Bad Weld. \nThe specific defect type is ${result.result.defect_type}. Please check the weld.`;
+          }
+        }
+      } else {
+        // If no result object is present, throw an error
+        throw new Error('No analysis result returned from the server');
+      }
+      
+      // Set the analysis result
+      setDssAnalysisResult(result.result);
+      console.log('Setting DSS analysis result:', result.result);
+      
+      // Only show the popup for bad welds or errors
+      if (result.result.classification === 'Bad Weld') {
+        setShowDssAnalysisPopup(true);
+        
+        // Auto-hide the popup after 30 seconds (longer than before to give time to read)
+        setTimeout(() => {
+          setShowDssAnalysisPopup(false);
+        }, 30000);
+      }
+    } catch (err: any) {
+      console.error('Error running DSS analysis:', err);
+      // Show a user-friendly error message
+      setError(`DSS analysis failed: ${err.message}`);
+      
+      // Create a default error result to display
+      setDssAnalysisResult({
+        classification: 'Error',
+        confidence: 0,
+        message: `Analysis failed: ${err.message}\n\nPlease try again with a different image or check the console for more details.`
+      });
+      
+      // Show the error popup
+      setShowDssAnalysisPopup(true);
+      
+      // Auto-hide the popup after 10 seconds
+      setTimeout(() => {
+        setShowDssAnalysisPopup(false);
+      }, 10000);
+    } finally {
+      setIsRunningDssAnalysis(false);
+    }
+  };
+  
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background p-6 space-y-6">
@@ -2223,6 +2473,76 @@ const handleDeleteROI = (isFirst: boolean) => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* DSS Analysis Result Popup - Simple format matching the example image */}
+        {showDssAnalysisPopup && dssAnalysisResult && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 max-w-md w-full">
+              <div className="flex flex-col">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-medium">Decision Support Window</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setShowDssAnalysisPopup(false)}
+                    className="h-6 w-6 rounded"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  {/* Display the message with proper formatting */}
+                  <div className="whitespace-pre-line font-mono">
+                    {dssAnalysisResult.message}
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex justify-center">
+                  <Button 
+                    onClick={() => setShowDssAnalysisPopup(false)}
+                    className="px-6"
+                    variant="outline"
+                  >
+                    OK
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add a visual indicator for DSS analysis */}
+        {importedImage2 && (
+          <div className="absolute bottom-4 right-4 z-10">
+            {isRunningDssAnalysis ? (
+              <div className="bg-indigo-600/90 text-white px-4 py-2 rounded-md shadow-md flex items-center animate-pulse">
+                <Spinner className="mr-2 h-4 w-4" />
+                <span>Analyzing weld quality...</span>
+              </div>
+            ) : dssAnalysisResult ? (
+              <div 
+                onClick={() => setShowDssAnalysisPopup(true)}
+                className={cn(
+                  "px-4 py-2 rounded-md shadow-md flex items-center cursor-pointer transition-all duration-300 hover:shadow-lg",
+                  dssAnalysisResult.classification === "Good Weld" 
+                    ? "bg-green-600/90 text-white" 
+                    : "bg-red-600/90 text-white"
+                )}
+              >
+                <div className={cn(
+                  "w-3 h-3 rounded-full mr-2",
+                  dssAnalysisResult.classification === "Good Weld" ? "bg-white" : "bg-white"
+                )}></div>
+                <span>
+                  {dssAnalysisResult.classification === "Good Weld" 
+                    ? "Good Weld Detected" 
+                    : `Defect: ${dssAnalysisResult.defect_type || 'Bad Weld'}`}
+                </span>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

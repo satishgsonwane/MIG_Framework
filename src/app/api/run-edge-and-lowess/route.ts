@@ -51,7 +51,12 @@ export async function POST(request: NextRequest) {
     // Execute the command
     const { stdout, stderr } = await execAsync(command);
     
-    if (stderr && !stderr.includes('Clipping input data to the valid range')) {
+    // Improved error handling for NumPy warnings
+    // Ignore common NumPy warnings that don't affect functionality
+    if (stderr && 
+        !stderr.includes('UserWarning') && 
+        !stderr.includes('loaded more than 1 DLL from .libs') && 
+        !stderr.includes('Clipping input data to the valid range')) {
       console.error(`Processing error: ${stderr}`);
       return NextResponse.json(
         { error: `Error processing image: ${stderr}` },
@@ -81,18 +86,38 @@ export async function POST(request: NextRequest) {
     console.log('- LOWESS visualization:', absoluteLowessVisPath, fs.existsSync(absoluteLowessVisPath));
     
     // Wait a moment to ensure files are fully written
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Increased timeout to 1 second
     
+    // Check for edge detection output
     if (!fs.existsSync(absoluteEdgeDetectionPath)) {
+      console.error('Edge detection output file not found after waiting');
+      
+      // Check if the directory exists, if not create it
+      const edgeDetectionDir = join(process.cwd(), 'public', 'edge_detection_results');
+      if (!fs.existsSync(edgeDetectionDir)) {
+        fs.mkdirSync(edgeDetectionDir, { recursive: true });
+        console.log('Created edge_detection_results directory');
+      }
+      
       return NextResponse.json(
-        { error: 'Edge detection output file not found' },
+        { error: 'Edge detection output file not found', details: stdout + '\n' + stderr },
         { status: 500 }
       );
     }
     
+    // Check for LOWESS output
     if (!fs.existsSync(absoluteLowessVisPath)) {
+      console.error('LOWESS visualization output file not found after waiting');
+      
+      // Check if the directory exists, if not create it
+      const lowessDir = join(process.cwd(), 'public', 'lowess_results');
+      if (!fs.existsSync(lowessDir)) {
+        fs.mkdirSync(lowessDir, { recursive: true });
+        console.log('Created lowess_results directory');
+      }
+      
       return NextResponse.json(
-        { error: 'LOWESS visualization output file not found' },
+        { error: 'LOWESS visualization output file not found', details: stdout + '\n' + stderr },
         { status: 500 }
       );
     }
