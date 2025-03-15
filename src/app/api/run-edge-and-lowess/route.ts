@@ -51,8 +51,12 @@ export async function POST(request: NextRequest) {
     // Execute the command
     const { stdout, stderr } = await execAsync(command);
     
-    if (stderr) {
+    if (stderr && !stderr.includes('Clipping input data to the valid range')) {
       console.error(`Processing error: ${stderr}`);
+      return NextResponse.json(
+        { error: `Error processing image: ${stderr}` },
+        { status: 500 }
+      );
     }
     
     console.log(`Processing output: ${stdout}`);
@@ -76,10 +80,19 @@ export async function POST(request: NextRequest) {
     console.log('- Edge detection:', absoluteEdgeDetectionPath, fs.existsSync(absoluteEdgeDetectionPath));
     console.log('- LOWESS visualization:', absoluteLowessVisPath, fs.existsSync(absoluteLowessVisPath));
     
-    if (!fs.existsSync(absoluteEdgeDetectionPath) || 
-        !fs.existsSync(absoluteLowessVisPath)) {
+    // Wait a moment to ensure files are fully written
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (!fs.existsSync(absoluteEdgeDetectionPath)) {
       return NextResponse.json(
-        { error: 'Processing failed to generate output files' },
+        { error: 'Edge detection output file not found' },
+        { status: 500 }
+      );
+    }
+    
+    if (!fs.existsSync(absoluteLowessVisPath)) {
+      return NextResponse.json(
+        { error: 'LOWESS visualization output file not found' },
         { status: 500 }
       );
     }

@@ -7,6 +7,15 @@ import csv
 import argparse
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
+# Set consistent figure sizes and DPI for better UI display
+FIGURE_WIDTH = 12.8  # inches
+FIGURE_HEIGHT = 7.2  # inches
+FIGURE_DPI = 100     # dots per inch
+
+# Set consistent image dimensions
+IMAGE_WIDTH = 1280
+IMAGE_HEIGHT = 720
+
 def process_image_with_edge_and_lowess(input_img, output_dir=None):
     """
     Process an image with edge detection and LOWESS analysis
@@ -36,9 +45,8 @@ def process_image_with_edge_and_lowess(input_img, output_dir=None):
     if img is None:
         raise ValueError(f"Could not read image: {input_img}")
     
-    # Resize the image to 1280x720 if it's not already
-    if img.shape[0] != 720 or img.shape[1] != 1280:
-        img = cv2.resize(img, (1280, 720))
+    # Resize the image to consistent dimensions
+    img = cv2.resize(img, (IMAGE_WIDTH, IMAGE_HEIGHT))
     
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -53,13 +61,20 @@ def process_image_with_edge_and_lowess(input_img, output_dir=None):
     aps = 3   # Aperture size
     edges = cv2.Canny(blurred, cl, cu, apertureSize=aps)
     
-    # Save the edge detection result
-    edge_result_path = os.path.join(edge_dir, f'{base_name}_edge_detection.png')
-    cv2.imwrite(edge_result_path, edges)
-    
     # Create a colored edge overlay for visualization
     edge_overlay = img.copy()
+    # Use bright red for better visibility
     edge_overlay[edges > 0] = [0, 0, 255]  # Red color for edges
+    
+    # Add a border to the edge detection result for better visibility
+    edges_colored = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+    # Add a white background for better visibility of the black and white edge image
+    white_bg = np.ones_like(edges_colored) * 255
+    edges_with_bg = cv2.addWeighted(edges_colored, 1, white_bg, 0.1, 0)
+    
+    # Save the edge detection result
+    edge_result_path = os.path.join(edge_dir, f'{base_name}_edge_detection.png')
+    cv2.imwrite(edge_result_path, edges_with_bg)
     
     # Save the edge overlay
     edge_overlay_path = os.path.join(edge_dir, f'{base_name}_edge_overlay.png')
@@ -97,11 +112,22 @@ def process_image_with_edge_and_lowess(input_img, output_dir=None):
     y_fit = poly_function(x_fit)
     
     # Create a new figure with the correct size
-    plt.figure(figsize=(12.8, 7.2))  # 1280x720 pixels at 100 dpi
+    plt.figure(figsize=(FIGURE_WIDTH, FIGURE_HEIGHT))
+    
+    # Set a white background with a light grid - using a more compatible style
+    try:
+        # Try to use ggplot style which is widely available
+        plt.style.use('ggplot')
+    except:
+        # If that fails, set basic grid properties manually
+        plt.rcParams['axes.grid'] = True
+        plt.rcParams['grid.linestyle'] = ':'
+        plt.rcParams['grid.color'] = '#cccccc'
+        plt.rcParams['axes.facecolor'] = '#f5f5f5'
     
     # Plot the original curve and the fitted polynomial curve
-    plt.scatter(x_sorted, y_sorted, label='Original Curve')
-    plt.plot(x_fit, y_fit, 'r-', label=f'Fitted Polynomial Degree {degree}')
+    plt.scatter(x_sorted, y_sorted, label='Original Curve', alpha=0.5, s=10, color='blue')
+    plt.plot(x_fit, y_fit, 'r-', label=f'Fitted Polynomial Degree {degree}', linewidth=2)
     
     # Invert the y-axis to correct the flipped image
     plt.gca().invert_yaxis()
@@ -112,13 +138,13 @@ def process_image_with_edge_and_lowess(input_img, output_dir=None):
     # Add labels and title
     plt.xlabel('X coordinate')
     plt.ylabel('Y coordinate')
-    plt.title('Weld Seam Curve Fitting')
+    plt.title('Weld Seam Curve Fitting', fontsize=14, fontweight='bold')
     
     plt.legend()
     
     # Save the polynomial fit figure
     poly_fit_path = os.path.join(lowess_dir, f'{base_name}_weld_seam_analysis.png')
-    plt.savefig(poly_fit_path, dpi=100, bbox_inches='tight')
+    plt.savefig(poly_fit_path, dpi=FIGURE_DPI, bbox_inches='tight')
     plt.close()
     
     # Output the fitted curve coordinates to a CSV file
@@ -148,9 +174,21 @@ def process_image_with_edge_and_lowess(input_img, output_dir=None):
     y_smoothed = smoothed[:, 1]
     
     # Create the LOWESS plot
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(FIGURE_WIDTH, FIGURE_HEIGHT))
+    
+    # Set a white background with a light grid - using a more compatible style
+    try:
+        # Try to use ggplot style which is widely available
+        plt.style.use('ggplot')
+    except:
+        # If that fails, set basic grid properties manually
+        plt.rcParams['axes.grid'] = True
+        plt.rcParams['grid.linestyle'] = ':'
+        plt.rcParams['grid.color'] = '#cccccc'
+        plt.rcParams['axes.facecolor'] = '#f5f5f5'
+    
     plt.scatter(x_sorted, y_sorted, color='blue', s=10, label='Original Data', alpha=0.5)
-    plt.plot(x_smoothed, y_smoothed, color='red', label='LOWESS Smoothed')
+    plt.plot(x_smoothed, y_smoothed, color='red', label='LOWESS Smoothed', linewidth=2)
     
     # Invert the y-axis
     plt.gca().invert_yaxis()
@@ -160,12 +198,12 @@ def process_image_with_edge_and_lowess(input_img, output_dir=None):
     
     plt.xlabel('X coordinate')
     plt.ylabel('Y coordinate')
-    plt.title('LOWESS Smoothing of Weld Seam Data')
+    plt.title('LOWESS Smoothing of Weld Seam Data', fontsize=14, fontweight='bold')
     plt.legend()
     
     # Save the LOWESS figure
     lowess_fit_path = os.path.join(lowess_dir, f'{base_name}_weld_seam_lowess_fit.png')
-    plt.savefig(lowess_fit_path, dpi=300, bbox_inches='tight')
+    plt.savefig(lowess_fit_path, dpi=FIGURE_DPI, bbox_inches='tight')
     plt.close()
     
     # Save the LOWESS coordinates to a new CSV file
@@ -179,9 +217,13 @@ def process_image_with_edge_and_lowess(input_img, output_dir=None):
     # Create a visualization image with the original image and LOWESS curve
     result_img = img.copy()
     
-    # Draw the LOWESS curve on the image
+    # Draw the LOWESS curve on the image with a thicker, more visible line
     points = np.column_stack((x_smoothed, y_smoothed)).astype(np.int32)
-    cv2.polylines(result_img, [points], False, (0, 255, 0), 2)
+    cv2.polylines(result_img, [points], False, (0, 255, 0), 3)  # Thicker green line
+    
+    # Add a label to the image
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(result_img, 'LOWESS Curve', (10, 30), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
     
     # Save the visualization
     vis_path = os.path.join(lowess_dir, f'{base_name}_lowess_visualization.png')

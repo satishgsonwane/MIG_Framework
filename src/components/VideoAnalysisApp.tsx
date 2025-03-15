@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
-import { Square, Play, Pause, Trash2, Info, HelpCircle, Upload, Image } from 'lucide-react';
+import { Square, Play, Pause, Trash2, Info, HelpCircle, Upload, Image, Maximize2, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Tooltip, 
@@ -1845,7 +1845,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                     )}
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="mt-4 flex flex-col gap-2">
                   <Button 
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg" 
                     onClick={handleAnalyze}
@@ -1861,7 +1861,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                     )}
                   </Button>
                   <Button 
-                    className="w-full transition-all duration-300 border-indigo-300 hover:border-indigo-400 hover:bg-indigo-50/30 text-indigo-700" 
+                    className="w-full transition-all duration-300 border-red-300 hover:border-red-400 hover:bg-red-50/30 text-red-700" 
                     onClick={runEdgeDetection}
                     disabled={isRunningEdgeDetection || (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image)}
                     variant="outline"
@@ -1872,9 +1872,16 @@ const handleDeleteROI = (isFirst: boolean) => {
                         Processing...
                       </>
                     ) : (
-                      'Edge & LOWESS Analysis'
+                      <>
+                        <LineChart className="mr-2 h-4 w-4" />
+                        Edge & LOWESS Analysis
+                      </>
                     )}
                   </Button>
+                  
+                  <div className="mt-2 text-xs text-muted-foreground text-center">
+                    <p>First analyze the joint type, then run edge detection and LOWESS analysis</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -2042,7 +2049,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner">
+                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner relative">
                   {isRunningEdgeDetection ? (
                     <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-rose-50/50">
                       <div className="relative w-16 h-16 mb-3">
@@ -2054,12 +2061,24 @@ const handleDeleteROI = (isFirst: boolean) => {
                       <span className="text-sm text-red-700 animate-pulse">Detecting edges in selected ROI...</span>
                     </div>
                   ) : edgeDetectionResult ? (
-                    <div className="relative h-full group">
-                      <img 
-                        src={edgeDetectionResult} 
-                        alt="Edge Detection Result" 
-                        className="w-full h-full object-contain transition-all duration-500 group-hover:scale-[1.02]"
-                      />
+                    <div className="relative h-full flex items-center justify-center group">
+                      <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={edgeDetectionResult} 
+                          alt="Edge Detection Result" 
+                          className="max-w-full max-h-full object-contain transition-all duration-500 group-hover:scale-[1.02]"
+                        />
+                      </div>
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-full bg-white/80 hover:bg-white shadow-sm"
+                          onClick={() => window.open(edgeDetectionResult, '_blank')}
+                        >
+                          <Maximize2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-red-900/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <p className="text-xs text-white font-medium">Edge detection completed successfully</p>
                       </div>
@@ -2070,15 +2089,15 @@ const handleDeleteROI = (isFirst: boolean) => {
                         <HelpCircle className="h-8 w-8 text-red-300" />
                       </div>
                       <span className="text-sm text-red-700">No edge detection results</span>
-                      <span className="text-xs text-red-500 mt-1">Select an ROI and click Edge Detection</span>
+                      <span className="text-xs text-red-500 mt-1">Select an ROI and click Edge & LOWESS Analysis</span>
                     </div>
                   )}
                 </div>
                 
-                {/* Add LOWESS Analysis Button */}
+                {/* Edge Detection Info */}
                 {edgeDetectionResult && !isRunningEdgeDetection && (
-                  <div className="mt-3">
-                    <p className="text-xs text-center text-red-600">Edge detection completed successfully</p>
+                  <div className="mt-3 bg-red-50 rounded-md p-2 border border-red-100">
+                    <p className="text-xs text-center text-red-600 font-medium">Edge detection highlights the contours of the weld seam</p>
                   </div>
                 )}
               </CardContent>
@@ -2107,7 +2126,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner">
+                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner relative">
                   {isRunningEdgeDetection ? (
                     <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-violet-50/50">
                       <div className="relative w-16 h-16 mb-3">
@@ -2119,12 +2138,24 @@ const handleDeleteROI = (isFirst: boolean) => {
                       <span className="text-sm text-purple-700 animate-pulse">Running LOWESS analysis...</span>
                     </div>
                   ) : lowessResult ? (
-                    <div className="relative h-full group">
-                      <img 
-                        src={lowessResult.visualizationPath} 
-                        alt="LOWESS Analysis Result" 
-                        className="w-full h-full object-contain transition-all duration-500 group-hover:scale-[1.02]"
-                      />
+                    <div className="relative h-full flex items-center justify-center group">
+                      <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={lowessResult.visualizationPath} 
+                          alt="LOWESS Analysis Result" 
+                          className="max-w-full max-h-full object-contain transition-all duration-500 group-hover:scale-[1.02]"
+                        />
+                      </div>
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-full bg-white/80 hover:bg-white shadow-sm"
+                          onClick={() => window.open(lowessResult.visualizationPath, '_blank')}
+                        >
+                          <Maximize2 className="h-4 w-4 text-purple-600" />
+                        </Button>
+                      </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-purple-900/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <p className="text-xs text-white font-medium">LOWESS analysis completed successfully</p>
                       </div>
@@ -2143,13 +2174,19 @@ const handleDeleteROI = (isFirst: boolean) => {
                 {/* View LOWESS Fit Details Button */}
                 {lowessResult && !isRunningEdgeDetection && (
                   <div className="mt-3">
-                    <Button 
-                      className="w-full transition-all duration-300 border-purple-300 hover:border-purple-400 hover:bg-purple-50/30 text-purple-700" 
-                      onClick={() => window.open(lowessResult.fitPath, '_blank')}
-                      variant="outline"
-                    >
-                      View LOWESS Fit Details
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <div className="bg-purple-50 rounded-md p-2 border border-purple-100">
+                        <p className="text-xs text-center text-purple-600 font-medium">LOWESS smoothing creates a continuous curve from the detected edges</p>
+                      </div>
+                      <Button 
+                        className="w-full transition-all duration-300 border-purple-300 hover:border-purple-400 hover:bg-purple-50/30 text-purple-700" 
+                        onClick={() => window.open(lowessResult.fitPath, '_blank')}
+                        variant="outline"
+                      >
+                        <LineChart className="h-4 w-4 mr-2" />
+                        View LOWESS Fit Details
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
