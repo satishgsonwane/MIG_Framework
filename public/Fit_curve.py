@@ -42,10 +42,10 @@ def process_image(image_path, output_dir):
                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
     
     # Add information about the image
-    cv2.putText(result_img, f"Image: {os.path.basename(image_path)}", (10, h - 60),
-               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-    cv2.putText(result_img, f"Size: {w}x{h} pixels", (10, h - 30),
-               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+    # cv2.putText(result_img, f"Image: {os.path.basename(image_path)}", (10, h - 60),
+    #            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+    # cv2.putText(result_img, f"Size: {w}x{h} pixels", (10, h - 30),
+    #            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
     
     # Save the result
     base_name = os.path.splitext(os.path.basename(image_path))[0]
