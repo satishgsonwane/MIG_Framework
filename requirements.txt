@@ -1,0 +1,39 @@
+# Core dependencies
+numpy==1.23.5
+scipy==1.10.1
+matplotlib==3.5.1
+opencv-python==4.11.0
+statsmodels==0.13.2
+
+# Intel optimizations
+daal==2021.4.0
+tbb==2021.13.1
+
+# Numba JIT compiler
+numba==0.56.4
+llvmlite==0.39.1
+
+# Additional dependencies
+pandas==1.4.2
+scikit-learn==1.0.2
+pillow==9.0.1
+
+# Development tools
+flake8==6.1.0
+pylint==2.17.5
+pycodestyle==2.11.1
+pyflakes==3.1.0
+mccabe==0.7.0
+
+# Jupyter support
+jupyter==1.0.0
+notebook==6.4.8
+ipykernel==6.9.1
+ipython==8.2.0
+ipywidgets==7.6.5
+jupyter-client==7.1.2
+jupyter-console==6.4.3
+jupyter-core==4.9.2
+nbconvert==6.4.4
+nbformat==5.3.0
+pywinpty==1.1.6
