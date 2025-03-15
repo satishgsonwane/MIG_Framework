@@ -1533,7 +1533,81 @@ const handleDeleteROI = (isFirst: boolean) => {
     
         {/* Bottom Section - Controls and Analysis */}
         <div className="grid grid-cols-12 gap-6">
-          {/* Left Column - Controls */}
+          {/* Left Column - Analysis Outputs */}
+          <div className="col-span-4 space-y-6">
+            {/* ROI Analysis */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">ROI Analysis</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                        <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Selected regions of interest from both camera feeds</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 gap-3 h-full">
+                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors">
+                    {roiAnalysis.roi1Image ? (
+                      <img 
+                        src={roiAnalysis.roi1Image} 
+                        alt="ROI 1" 
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">No ROI selected</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors">
+                    {roiAnalysis.roi2Image ? (
+                      <img 
+                        src={roiAnalysis.roi2Image} 
+                        alt="ROI 2" 
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">No ROI selected</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Joint Analysis */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Joint Analysis</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                        <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Analysis of joint quality and characteristics</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Middle Column - Controls */}
           <div className="col-span-4 space-y-6">
             {/* Joint Configuration */}
             <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -1653,128 +1727,51 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
           </div>
 
-          {/* Right Column - Analysis Outputs */}
-          <div className="col-span-8 space-y-6">
-            {/* Top Row */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* ROI Analysis */}
-              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">ROI Analysis</CardTitle>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                          <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Selected regions of interest from both camera feeds</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 gap-3 h-full">
-                    <div className="h-full bg-muted rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors">
-                      {roiAnalysis.roi1Image ? (
-                        <img 
-                          src={roiAnalysis.roi1Image} 
-                          alt="ROI 1" 
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <div className="h-full flex items-center justify-center">
-                          <span className="text-sm text-muted-foreground">No ROI selected</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="h-full bg-muted rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors">
-                      {roiAnalysis.roi2Image ? (
-                        <img 
-                          src={roiAnalysis.roi2Image} 
-                          alt="ROI 2" 
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <div className="h-full flex items-center justify-center">
-                          <span className="text-sm text-muted-foreground">No ROI selected</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Right Column - Additional Analysis */}
+          <div className="col-span-4 space-y-6">
+            {/* Edge Detection */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Edge Detection</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                        <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Edge detection analysis of the selected regions</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
+              </CardContent>
+            </Card>
 
-              {/* Canny Edge Detection */}
-              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Edge Detection</CardTitle>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                          <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Edge detection analysis of the selected regions</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Bottom Row */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* Joint Analysis */}
-              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Joint Analysis</CardTitle>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                          <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Analysis of joint quality and characteristics</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
-                </CardContent>
-              </Card>
-
-              {/* LOWESS Visualization */}
-              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">LOWESS Analysis</CardTitle>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                          <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Locally weighted scatterplot smoothing analysis</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
-                </CardContent>
-              </Card>
-            </div>
+            {/* LOWESS Visualization */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">LOWESS Analysis</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                        <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Locally weighted scatterplot smoothing analysis</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
+              </CardContent>
+            </Card>
           </div>
         </div>
     
