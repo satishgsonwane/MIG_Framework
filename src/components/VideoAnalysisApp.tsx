@@ -191,6 +191,13 @@ const VideoAnalysisApp: React.FC = () => {
   const [edgeDetectionResult, setEdgeDetectionResult] = useState<string | null>(null);
   const [savedImagePath, setSavedImagePath] = useState<string | null>(null);
   
+  // Add these new states for LOWESS analysis
+  const [isRunningLowess, setIsRunningLowess] = useState(false);
+  const [lowessResult, setLowessResult] = useState<{
+    visualizationPath: string;
+    fitPath: string;
+  } | null>(null);
+  
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -1242,7 +1249,7 @@ const handleDeleteROI = (isFirst: boolean) => {
     }
   };
   
-  // Add function to run edge detection
+  // Replace the runEdgeDetection function with a combined function
   const runEdgeDetection = async () => {
     setIsRunningEdgeDetection(true);
     
@@ -1257,35 +1264,55 @@ const handleDeleteROI = (isFirst: boolean) => {
         } else if (roiAnalysis.roi2Image) {
           imagePath = await saveROIAsImage(roiAnalysis.roi2Image, 'roi2.png');
         } else {
-          throw new Error('No ROI selected for edge detection');
+          throw new Error('No ROI selected for analysis');
         }
         
         // Save the image path for future use
         setSavedImagePath(imagePath);
       }
       
-      const response = await fetch('/api/run-edge-detection', {
+      console.log('Sending request to API with image path:', savedImagePath);
+      
+      // Call the combined edge detection and LOWESS analysis API
+      const response = await fetch('/api/run-edge-and-lowess', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ imagePath: savedImagePath || '' })
+        body: JSON.stringify({ 
+          // Remove 'public/' prefix if it exists
+          imagePath: savedImagePath?.startsWith('public/') 
+            ? savedImagePath.substring(7) 
+            : savedImagePath || '' 
+        })
       });
       
+      console.log('API response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to run edge detection');
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`Failed to run analysis: ${response.status} ${errorText}`);
       }
       
       const result = await response.json();
+      console.log('API response data:', result);
       
-      if (result.success && result.edgeDetectionImagePath) {
-        setEdgeDetectionResult(result.edgeDetectionImagePath);
+      if (result.success) {
+        // Set both edge detection and LOWESS results
+        setEdgeDetectionResult(result.edgeDetectionPath);
+        
+        // Also set LOWESS results
+        setLowessResult({
+          visualizationPath: result.lowessVisualizationPath,
+          fitPath: result.lowessFitPath
+        });
       } else {
-        throw new Error(result.error || 'Edge detection failed');
+        throw new Error(result.error || 'Analysis failed');
       }
     } catch (err: any) {
-      console.error('Error running edge detection:', err);
-      setError(err.message || 'Failed to run edge detection');
+      console.error('Error running analysis:', err);
+      setError(err.message || 'Failed to run analysis');
     } finally {
       setIsRunningEdgeDetection(false);
       setShowEdgeDetectionConfirm(false);
@@ -1845,7 +1872,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                         Processing...
                       </>
                     ) : (
-                      'Edge Detection'
+                      'Edge & LOWESS Analysis'
                     )}
                   </Button>
                 </div>
@@ -2047,17 +2074,24 @@ const handleDeleteROI = (isFirst: boolean) => {
                     </div>
                   )}
                 </div>
+                
+                {/* Add LOWESS Analysis Button */}
+                {edgeDetectionResult && !isRunningEdgeDetection && (
+                  <div className="mt-3">
+                    <p className="text-xs text-center text-red-600">Edge detection completed successfully</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* LOWESS Visualization */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-cyan-950/5">
-              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-cyan-900/10">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-purple-950/5">
+              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-purple-900/10">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-gradient-to-b from-cyan-500 to-sky-600 rounded-full mr-2"></div>
-                      <span className="text-cyan-600">LOWESS Analysis</span>
+                      <div className="w-1 h-6 bg-gradient-to-b from-purple-500 to-violet-600 rounded-full mr-2"></div>
+                      <span className="text-purple-600">LOWESS Analysis</span>
                     </div>
                   </CardTitle>
                   <Tooltip>
@@ -2067,19 +2101,57 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Locally weighted scatterplot smoothing analysis</p>
+                      <p>LOWESS smoothing analysis of the detected edges</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-cyan-400 transition-all duration-300 shadow-inner flex flex-col items-center justify-center bg-gradient-to-br from-cyan-50 to-sky-50/50">
-                  <div className="w-16 h-16 rounded-full bg-cyan-100 flex items-center justify-center mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400"><path d="M3 3v18h18"/><path d="M7 12c0-1.7 1.3-3 3-3h4c1.7 0 3 1.3 3 3s-1.3 3-3 3h-4c-1.7 0-3-1.3-3-3z"/></svg>
-                  </div>
-                  <span className="text-sm text-cyan-700">LOWESS Analysis</span>
-                  <span className="text-xs text-cyan-500 mt-1">Coming soon</span>
+                <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner">
+                  {isRunningEdgeDetection ? (
+                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-violet-50/50">
+                      <div className="relative w-16 h-16 mb-3">
+                        <div className="absolute inset-0 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-xs font-medium text-purple-600">Processing</span>
+                        </div>
+                      </div>
+                      <span className="text-sm text-purple-700 animate-pulse">Running LOWESS analysis...</span>
+                    </div>
+                  ) : lowessResult ? (
+                    <div className="relative h-full group">
+                      <img 
+                        src={lowessResult.visualizationPath} 
+                        alt="LOWESS Analysis Result" 
+                        className="w-full h-full object-contain transition-all duration-500 group-hover:scale-[1.02]"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-purple-900/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <p className="text-xs text-white font-medium">LOWESS analysis completed successfully</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-violet-50/50">
+                      <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                        <HelpCircle className="h-8 w-8 text-purple-300" />
+                      </div>
+                      <span className="text-sm text-purple-700">No LOWESS analysis results</span>
+                      <span className="text-xs text-purple-500 mt-1">Click "Edge & LOWESS Analysis" to process</span>
+                    </div>
+                  )}
                 </div>
+                
+                {/* View LOWESS Fit Details Button */}
+                {lowessResult && !isRunningEdgeDetection && (
+                  <div className="mt-3">
+                    <Button 
+                      className="w-full transition-all duration-300 border-purple-300 hover:border-purple-400 hover:bg-purple-50/30 text-purple-700" 
+                      onClick={() => window.open(lowessResult.fitPath, '_blank')}
+                      variant="outline"
+                    >
+                      View LOWESS Fit Details
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
