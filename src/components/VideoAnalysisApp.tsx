@@ -1779,7 +1779,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                       <Play className="h-8 w-8 text-indigo-500" />
                     </div>
                     <p className="text-sm font-medium text-indigo-700">Click play to start camera</p>
-                    <p className="text-xs text-indigo-500 mt-1">or import an image for analysis</p>
+                    <p className="text-xs text-indigo-500 mt-1">the feed is processed at 20 Hz</p>
                   </div>
                 )}
               </div>
@@ -1803,47 +1803,28 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Selected regions of interest from both camera feeds</p>
+                      <p>Selected region of interest for analysis</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="grid grid-cols-2 gap-3 h-full">
-                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border/50 hover:border-purple-400 transition-all duration-300 shadow-inner">
-                    {roiAnalysis.roi1Image ? (
-                      <img 
-                        src={roiAnalysis.roi1Image} 
-                        alt="ROI 1" 
-                        className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
-                      />
-                    ) : (
-                      <div className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50/50">
-                        <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                          <Square className="h-6 w-6 text-purple-400" />
-                        </div>
-                        <span className="text-sm text-purple-700 text-center">No ROI selected</span>
-                        <span className="text-xs text-purple-500 mt-1 text-center">Use the square tool to select a region</span>
+                <div className="h-full bg-muted rounded-lg overflow-hidden border border-border/50 hover:border-purple-400 transition-all duration-300 shadow-inner">
+                  {roiAnalysis.roi1Image ? (
+                    <img 
+                      src={roiAnalysis.roi1Image} 
+                      alt="ROI 1" 
+                      className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+                    />
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50/50">
+                      <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                        <Square className="h-6 w-6 text-purple-400" />
                       </div>
-                    )}
-                  </div>
-                  <div className="h-full bg-muted rounded-lg overflow-hidden border border-border/50 hover:border-purple-400 transition-all duration-300 shadow-inner">
-                    {roiAnalysis.roi2Image ? (
-                      <img 
-                        src={roiAnalysis.roi2Image} 
-                        alt="ROI 2" 
-                        className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
-                      />
-                    ) : (
-                      <div className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50/50">
-                        <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                          <Square className="h-6 w-6 text-purple-400" />
-                        </div>
-                        <span className="text-sm text-purple-700 text-center">No ROI selected</span>
-                        <span className="text-xs text-purple-500 mt-1 text-center">Use the square tool to select a region</span>
-                      </div>
-                    )}
-                  </div>
+                      <span className="text-sm text-purple-700 text-center">No ROI selected</span>
+                      <span className="text-xs text-purple-500 mt-1 text-center">Use the square tool to select a region</span>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-4 flex flex-col gap-2">
                   <Button 
