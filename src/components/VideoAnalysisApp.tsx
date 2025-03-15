@@ -129,6 +129,9 @@ const VideoAnalysisApp: React.FC = () => {
   const [isStream2Active, setIsStream2Active] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
+  // Add controller connection state
+  const [controllerConnected, setControllerConnected] = useState(false);
+  
   // ROI states
   const [roi1State, setRoi1State] = useState<ROIState>({
     start: null,
@@ -143,7 +146,7 @@ const VideoAnalysisApp: React.FC = () => {
   
   // Other states
   const [error, setError] = useState('');
-  const [jointType, setJointType] = useState(jointTypes[0].id);
+  const [jointType, setJointType] = useState<string>(""); // Changed from jointTypes[0].id to empty string
   const [animationFrame, setAnimationFrame] = useState<number | null>(null);
   const [roiAnalysis, setRoiAnalysis] = useState<ROIAnalysis>({
     roi1Image: null,
@@ -1362,6 +1365,29 @@ const handleDeleteROI = (isFirst: boolean) => {
           onChange={(e) => handleImageImport(false, e)} 
         />
         
+        {/* Controller Connection Status - Added at the top */}
+        <div className="absolute top-4 right-6 z-10">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-background/90 backdrop-blur-sm border border-border/50 shadow-md">
+            <div className={cn(
+              "w-3 h-3 rounded-full transition-colors duration-500",
+              controllerConnected ? "bg-green-500 animate-pulse" : "bg-red-500"
+            )} />
+            <span className="text-sm font-medium">
+              {controllerConnected ? "Controller Connected" : "Controller Not Connected"}
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full ml-1">
+                  <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>TCP connection status with the robot controller</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+        
         {/* Page Header */}
         <div className="space-y-2 mb-8">
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">Weld Analysis Dashboard</h1>
@@ -1857,11 +1883,11 @@ const handleDeleteROI = (isFirst: boolean) => {
                     </HoverCardContent>
                   </HoverCard>
                 </div>
-                <CardDescription className="pb-3">Select the type of joint for analysis</CardDescription>
+                <CardDescription className="pb-3">Select the type of joint for analysis or use "Analyse" to auto-detect</CardDescription>
                 <div className="grid grid-cols-2 gap-4">
                   <Select value={jointType} onValueChange={setJointType}>
                     <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30">
-                      <SelectValue placeholder="Select joint type" />
+                      <SelectValue placeholder="Click 'Analyse' to auto-detect" />
                     </SelectTrigger>
                     <SelectContent>
                       {jointTypes.map((type) => (
@@ -1876,13 +1902,21 @@ const handleDeleteROI = (isFirst: boolean) => {
                     </SelectContent>
                   </Select>
                   <div className="flex items-center justify-end">
-                    <div className="px-3 py-1.5 rounded-md bg-green-100 border border-green-200">
-                      <span className="text-sm">
-                        Selected: <span className="font-medium capitalize text-green-700">
-                          {jointTypes.find(t => t.id === jointType)?.name || jointType}
+                    {jointType ? (
+                      <div className="px-3 py-1.5 rounded-md bg-green-100 border border-green-200">
+                        <span className="text-sm">
+                          Selected: <span className="font-medium capitalize text-green-700">
+                            {jointTypes.find(t => t.id === jointType)?.name || jointType}
+                          </span>
                         </span>
-                      </span>
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="px-3 py-1.5 rounded-md bg-blue-100 border border-blue-200">
+                        <span className="text-sm text-blue-700">
+                          <span className="font-medium">Tip:</span> Use "Analyse" to auto-detect
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
