@@ -42,3 +42,4 @@ next-env.d.ts
 
 #images
 /public/uploads
+/public/edge_detection_results

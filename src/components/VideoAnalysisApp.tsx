@@ -182,6 +182,12 @@ const VideoAnalysisApp: React.FC = () => {
   } | null>(null);
   const [showAnalysisPopup, setShowAnalysisPopup] = useState(false);
   
+  // Add these new states for edge detection
+  const [showEdgeDetectionConfirm, setShowEdgeDetectionConfirm] = useState(false);
+  const [isRunningEdgeDetection, setIsRunningEdgeDetection] = useState(false);
+  const [edgeDetectionResult, setEdgeDetectionResult] = useState<string | null>(null);
+  const [savedImagePath, setSavedImagePath] = useState<string | null>(null);
+  
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -1233,7 +1239,57 @@ const handleDeleteROI = (isFirst: boolean) => {
     }
   };
   
-  // Add function to handle analysis
+  // Add function to run edge detection
+  const runEdgeDetection = async () => {
+    setIsRunningEdgeDetection(true);
+    
+    try {
+      // If we don't have a saved image path yet, save the ROI first
+      if (!savedImagePath) {
+        let imagePath = '';
+        
+        // Prioritize ROI 1 if available, otherwise use ROI 2
+        if (roiAnalysis.roi1Image) {
+          imagePath = await saveROIAsImage(roiAnalysis.roi1Image, 'roi1.png');
+        } else if (roiAnalysis.roi2Image) {
+          imagePath = await saveROIAsImage(roiAnalysis.roi2Image, 'roi2.png');
+        } else {
+          throw new Error('No ROI selected for edge detection');
+        }
+        
+        // Save the image path for future use
+        setSavedImagePath(imagePath);
+      }
+      
+      const response = await fetch('/api/run-edge-detection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ imagePath: savedImagePath || '' })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to run edge detection');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.edgeDetectionImagePath) {
+        setEdgeDetectionResult(result.edgeDetectionImagePath);
+      } else {
+        throw new Error(result.error || 'Edge detection failed');
+      }
+    } catch (err: any) {
+      console.error('Error running edge detection:', err);
+      setError(err.message || 'Failed to run edge detection');
+    } finally {
+      setIsRunningEdgeDetection(false);
+      setShowEdgeDetectionConfirm(false);
+    }
+  };
+  
+  // Modify the handleAnalyze function to not show edge detection confirmation
   const handleAnalyze = async () => {
     // Check if ROIs are selected
     if (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image) {
@@ -1253,6 +1309,9 @@ const handleDeleteROI = (isFirst: boolean) => {
         imagePath = await saveROIAsImage(roiAnalysis.roi2Image, 'roi2.png');
       }
       
+      // Save the image path for edge detection
+      setSavedImagePath(imagePath);
+      
       // Run weld prediction
       const result = await runWeldPrediction(imagePath);
       
@@ -1270,10 +1329,10 @@ const handleDeleteROI = (isFirst: boolean) => {
         }
       }
       
-      // Show popup
+      // Show joint identification popup
       setShowAnalysisPopup(true);
       
-      // Auto-hide popup after 5 seconds
+      // Auto-hide analysis popup after 5 seconds
       setTimeout(() => {
         setShowAnalysisPopup(false);
       }, 5000);
@@ -1700,7 +1759,7 @@ const handleDeleteROI = (isFirst: boolean) => {
                     )}
                   </div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button 
                     className="w-full" 
                     onClick={handleAnalyze}
@@ -1713,6 +1772,21 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </>
                     ) : (
                       'Analyse'
+                    )}
+                  </Button>
+                  <Button 
+                    className="w-full" 
+                    onClick={runEdgeDetection}
+                    disabled={isRunningEdgeDetection || (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image)}
+                    variant="outline"
+                  >
+                    {isRunningEdgeDetection ? (
+                      <>
+                        <Spinner className="mr-2 h-4 w-4" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Edge Detection'
                     )}
                   </Button>
                 </div>
@@ -1857,7 +1931,24 @@ const handleDeleteROI = (isFirst: boolean) => {
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
+                <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors">
+                  {isRunningEdgeDetection ? (
+                    <div className="h-full flex items-center justify-center">
+                      <Spinner className="mr-2 h-6 w-6" />
+                      <span>Processing edge detection...</span>
+                    </div>
+                  ) : edgeDetectionResult ? (
+                    <img 
+                      src={edgeDetectionResult} 
+                      alt="Edge Detection Result" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <span className="text-sm text-muted-foreground">No edge detection results</span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
