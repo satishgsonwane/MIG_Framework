@@ -174,6 +174,14 @@ const VideoAnalysisApp: React.FC = () => {
   const cachedImage1Ref = useRef<HTMLImageElement | null>(null);
   const cachedImage2Ref = useRef<HTMLImageElement | null>(null);
   
+  // Add these new states for analysis
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<{
+    predictedClass: string;
+    confidence: number | null;
+  } | null>(null);
+  const [showAnalysisPopup, setShowAnalysisPopup] = useState(false);
+  
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -1165,6 +1173,117 @@ const handleDeleteROI = (isFirst: boolean) => {
     return () => cleanup();
   }, []);
   
+  // Add function to save ROI as image file
+  const saveROIAsImage = async (dataUrl: string, fileName: string): Promise<string> => {
+    try {
+      // Convert data URL to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      
+      // Create a File object
+      const file = new File([blob], fileName, { type: 'image/png' });
+      
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Send to server endpoint that saves the file
+      const saveResponse = await fetch('/api/save-roi-image', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save ROI image');
+      }
+      
+      const result = await saveResponse.json();
+      return result.filePath;
+    } catch (err) {
+      console.error('Error saving ROI image:', err);
+      setError('Failed to save ROI image for analysis');
+      throw err;
+    }
+  };
+  
+  // Add function to run weld prediction
+  const runWeldPrediction = async (imagePath: string): Promise<{predictedClass: string, confidence: number | null}> => {
+    try {
+      const response = await fetch('/api/run-weld-prediction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ imagePath })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to run weld prediction');
+      }
+      
+      const result = await response.json();
+      return {
+        predictedClass: result.predictedClass,
+        confidence: result.confidence
+      };
+    } catch (err) {
+      console.error('Error running weld prediction:', err);
+      setError('Failed to run weld prediction');
+      throw err;
+    }
+  };
+  
+  // Add function to handle analysis
+  const handleAnalyze = async () => {
+    // Check if ROIs are selected
+    if (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image) {
+      setError('Please select at least one ROI for analysis');
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    
+    try {
+      let imagePath = '';
+      
+      // Prioritize ROI 1 if available, otherwise use ROI 2
+      if (roiAnalysis.roi1Image) {
+        imagePath = await saveROIAsImage(roiAnalysis.roi1Image, 'roi1.png');
+      } else if (roiAnalysis.roi2Image) {
+        imagePath = await saveROIAsImage(roiAnalysis.roi2Image, 'roi2.png');
+      }
+      
+      // Run weld prediction
+      const result = await runWeldPrediction(imagePath);
+      
+      // Update state with results
+      setAnalysisResult(result);
+      
+      // Set joint type based on prediction
+      if (result.predictedClass) {
+        const matchingJointType = jointTypes.find(
+          type => type.name.toLowerCase().includes(result.predictedClass.toLowerCase())
+        );
+        
+        if (matchingJointType) {
+          setJointType(matchingJointType.id);
+        }
+      }
+      
+      // Show popup
+      setShowAnalysisPopup(true);
+      
+      // Auto-hide popup after 5 seconds
+      setTimeout(() => {
+        setShowAnalysisPopup(false);
+      }, 5000);
+    } catch (err) {
+      console.error('Analysis error:', err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+  
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background p-6 space-y-6">
@@ -1533,7 +1652,7 @@ const handleDeleteROI = (isFirst: boolean) => {
     
         {/* Bottom Section - Controls and Analysis */}
         <div className="grid grid-cols-12 gap-6">
-          {/* Left Column - Analysis Outputs */}
+          {/* Left Column - ROI Analysis */}
           <div className="col-span-4 space-y-6">
             {/* ROI Analysis */}
             <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -1581,34 +1700,25 @@ const handleDeleteROI = (isFirst: boolean) => {
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Joint Analysis */}
-            <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-              <CardHeader className="p-4 pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Joint Analysis</CardTitle>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                        <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Analysis of joint quality and characteristics</p>
-                    </TooltipContent>
-                  </Tooltip>
+                <div className="mt-4">
+                  <Button 
+                    className="w-full" 
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing || (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image)}
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Spinner className="mr-2 h-4 w-4" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      'Analyse'
+                    )}
+                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="aspect-video bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors"></div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Middle Column - Controls */}
-          <div className="col-span-4 space-y-6">
             {/* Joint Configuration */}
             <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-4">
@@ -1727,8 +1837,8 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
           </div>
 
-          {/* Right Column - Additional Analysis */}
-          <div className="col-span-4 space-y-6">
+          {/* Right Column - Analysis Visualizations */}
+          <div className="col-span-8 grid grid-cols-2 gap-6">
             {/* Edge Detection */}
             <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
               <CardHeader className="p-4 pb-2">
@@ -1780,6 +1890,35 @@ const handleDeleteROI = (isFirst: boolean) => {
           <Alert variant="destructive" className="fixed bottom-4 right-4 max-w-md animate-in slide-in-from-bottom-2">
             <AlertDescription className="text-sm">{error}</AlertDescription>
           </Alert>
+        )}
+
+        {/* Analysis Result Popup */}
+        {showAnalysisPopup && analysisResult && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowAnalysisPopup(false)}></div>
+            <div className="bg-background rounded-lg shadow-lg p-6 max-w-md w-full z-10 animate-in fade-in-50 slide-in-from-bottom-10">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Analysis Result</h3>
+                <Button variant="ghost" size="icon" onClick={() => setShowAnalysisPopup(false)}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </Button>
+              </div>
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="font-medium">Predicted Joint Type:</p>
+                  <p className="text-lg font-bold">{analysisResult.predictedClass}</p>
+                  {analysisResult.confidence !== null && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Confidence: {(analysisResult.confidence * 100).toFixed(2)}%
+                    </p>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  The joint type has been automatically updated in the configuration panel.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </TooltipProvider>

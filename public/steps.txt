@@ -1,0 +1,14 @@
+# Create a virtual environment
+python -m venv weld_env
+
+# Activate the virtual environment
+.\weld_env\Scripts\Activate
+
+# You should now see (weld_env) at the beginning of your PowerShell prompt
+
+# Install required packages
+pip install torch torchvision scikit-learn matplotlib seaborn joblib pillow
+
+python weld_prediction.py --image path/to/image.jpg --visualize
+
+python weld_prediction.py --image path/to/image/directory --batch --pattern "*.jpg" --visualize
