@@ -1,38 +1,121 @@
-Video feed is being received properly in current state.
+# MIG Welding Analysis Framework
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+A comprehensive framework for analyzing MIG (Metal Inert Gas) welding quality using machine learning models. This system combines real-time video analysis with deep learning models to detect and classify welding defects.
 
-## Getting Started
+## Features
 
-First, run the development server:
+- Real-time video feed analysis from welding camera
+- Image import and ROI (Region of Interest) selection
+- Automated weld quality assessment
+- Defect classification with detailed analysis
+- Causes and remedies suggestions for identified defects
+- Support for both MATLAB and ONNX models
 
+## Defect Types Detected
+
+1. Burn Through
+2. Contamination
+3. Lack of Fusion
+4. Lack of Penetration
+5. Misalignment
+
+## Prerequisites
+
+- Python 3.8 or higher
+- Node.js 16.x or higher
+- MATLAB R2021b or higher (optional, for MATLAB-based analysis)
+- CUDA-compatible GPU (recommended for optimal performance)
+
+## Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone [repository-url]
+cd MIG_Framework
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install Python dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Install Node.js dependencies:
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. (Optional) Install MATLAB Engine for Python:
+```matlab
+cd (fullfile(matlabroot,'extern','engines','python'))
+system('python setup.py install')
+```
 
-## Learn More
+## Configuration
 
-To learn more about Next.js, take a look at the following resources:
+1. Place your trained models in the `public` directory:
+   - For ONNX: `net2.onnx` and `net5.onnx`
+   - For MATLAB: `net2.mat` and `net5.mat`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Configure the camera settings in the application if needed.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Usage
 
-## Deploy on Vercel
+1. Start the development server:
+```bash
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Open your browser and navigate to `http://localhost:3000`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Use the application through the web interface:
+   - Import images or use live camera feed
+   - Select ROI for analysis
+   - View analysis results and recommendations
+
+## API Endpoints
+
+### POST `/api/run-dss-analysis`
+Analyzes a welding image and returns quality assessment results.
+
+Request body:
+```json
+{
+  "imagePath": "string"
+}
+```
+
+Response:
+```json
+{
+  "classification": "string",
+  "confidence": "number",
+  "defect_type": "string",
+  "defect_confidence": "number",
+  "message": "string"
+}
+```
+
+## Project Structure
+
+```
+MIG_Framework/
+├── public/
+│   ├── dss.py
+│   ├── net2.onnx
+│   └── net5.onnx
+├── src/
+│   ├── app/
+│   │   └── api/
+│   └── components/
+│       └── VideoAnalysisApp.tsx
+├── package.json
+└── requirements.txt
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
