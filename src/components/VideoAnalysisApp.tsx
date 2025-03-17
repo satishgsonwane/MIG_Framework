@@ -65,9 +65,21 @@ const jointTypes: JointType[] = [
 const weldParameters: WeldParameter[] = [
   {
     id: 'material',
-    name: 'Welding Material',
+    name: 'Material Type',
     unit: '',
     options: ['Mild Steel', 'Stainless Steel', 'Aluminum', 'Nickel Alloy']
+  },
+  {
+    id: 'plateThickness',
+    name: 'Plate Thickness',
+    unit: 'mm',
+    options: ['1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0']
+  },
+  {
+    id: 'wireDiameter',
+    name: 'Wire Diameter',
+    unit: 'mm',
+    options: ['0.8', '1.0', '1.2', '1.6']
   },
   {
     id: 'current',
@@ -82,28 +94,22 @@ const weldParameters: WeldParameter[] = [
     options: ['15', '18', '21', '24', '27', '30', '33', '36']
   },
   {
-    id: 'speed',
-    name: 'Welding Speed',
-    unit: 'mm/s',
-    options: ['2', '4', '6', '8', '10', '12', '14', '16']
-  },
-  {
     id: 'wireFeedSpeed',
     name: 'Wire Feed Speed',
     unit: 'm/min',
     options: ['2', '4', '6', '8', '10', '12', '14', '16']
   },
   {
-    id: 'gasFlow',
-    name: 'Gas Flow',
-    unit: 'L/min',
-    options: ['8', '10', '12', '14', '16', '18', '20', '22']
+    id: 'speed',
+    name: 'Travel Speed',
+    unit: 'mm/s',
+    options: ['2', '4', '6', '8', '10', '12', '14', '16']
   },
   {
-    id: 'wireDiameter',
-    name: 'Wire Diameter',
-    unit: 'mm',
-    options: ['0.8', '1.0', '1.2', '1.6']
+    id: 'gasFlow',
+    name: 'Gas Flow Rate',
+    unit: 'L/min',
+    options: ['8', '10', '12', '14', '16', '18', '20', '22']
   }
 ];
 
@@ -2172,8 +2178,81 @@ const handleDeleteROI = (isFirst: boolean) => {
                   </HoverCard>
                 </div>
                 <CardDescription className='pb-3'>Configure welding parameters for analysis</CardDescription>
+                
+                {/* Material and Plate Thickness in first row */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  {/* Material Type */}
+                  <div className="space-y-2 group">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <label className="text-sm font-medium flex items-center gap-1 cursor-help group-hover:text-primary transition-colors">
+                          Material Type
+                          <Info className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </label>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Select the base material type</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Select
+                      value={weldParams['material']}
+                      onValueChange={(value) => setWeldParams(prev => ({ ...prev, material: value }))}
+                    >
+                      <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30">
+                        <SelectValue placeholder="Select material" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {weldParameters[0].options.map((option) => (
+                          <SelectItem 
+                            key={option} 
+                            value={option}
+                            className="hover:bg-accent transition-colors"
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Plate Thickness */}
+                  <div className="space-y-2 group">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <label className="text-sm font-medium flex items-center gap-1 cursor-help group-hover:text-primary transition-colors">
+                          Plate Thickness (mm)
+                          <Info className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </label>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Select the workpiece thickness</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Select
+                      value={weldParams['plateThickness']}
+                      onValueChange={(value) => setWeldParams(prev => ({ ...prev, plateThickness: value }))}
+                    >
+                      <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30">
+                        <SelectValue placeholder="Select thickness" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {weldParameters[1].options.map((option) => (
+                          <SelectItem 
+                            key={option} 
+                            value={option}
+                            className="hover:bg-accent transition-colors"
+                          >
+                            {option} mm
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Remaining parameters in grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  {weldParameters.map((param: WeldParameter) => (
+                  {weldParameters.slice(2).map((param: WeldParameter) => (
                     <div key={param.id} className="space-y-2 group">
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -2188,15 +2267,13 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </Tooltip>
                       <Select
                         value={weldParams[param.id]}
-                        onValueChange={(value: string) => 
-                          setWeldParams((prev: Record<string, string>) => ({ ...prev, [param.id]: value }))
-                        }
+                        onValueChange={(value) => setWeldParams(prev => ({ ...prev, [param.id]: value }))}
                       >
-                        <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30 group-hover:border-primary/50 transition-colors">
+                        <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30">
                           <SelectValue placeholder={`Select ${param.name}`} />
                         </SelectTrigger>
                         <SelectContent>
-                          {param.options.map((option: string) => (
+                          {param.options.map((option) => (
                             <SelectItem 
                               key={option} 
                               value={option}
