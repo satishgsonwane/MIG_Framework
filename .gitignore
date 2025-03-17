@@ -44,3 +44,4 @@ next-env.d.ts
 /public/uploads
 /public/edge_detection_results
 /public/lowess_results
+/public/weld_env
