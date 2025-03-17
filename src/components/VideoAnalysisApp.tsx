@@ -54,6 +54,19 @@ interface WeldParameter {
   options: string[];
 }
 
+// Add this interface near the top with other interfaces
+interface WeldParams {
+  material: string;
+  plateThickness: string;
+  wireDiameter: string;
+  current: string;
+  voltage: string;
+  wireFeedSpeed: string;
+  speed: string;
+  gasFlow: string;
+  [key: string]: string; // Allow string indexing
+}
+
 const jointTypes: JointType[] = [
   { id: 'lap', name: 'Lap Joint', description: 'Overlapping joint connection' },
   { id: 'butt', name: 'Butt Joint', description: 'End to end joint connection' },
@@ -160,9 +173,16 @@ const VideoAnalysisApp: React.FC = () => {
   });
   
   // Weld parameter states
-  const [weldParams, setWeldParams] = useState<Record<string, string>>(() => 
-    Object.fromEntries(weldParameters.map(param => [param.id, param.options[0]]))
-  );
+  const [weldParams, setWeldParams] = useState<WeldParams>(() => ({
+    material: '',
+    plateThickness: '',
+    wireDiameter: '',
+    current: '',
+    voltage: '',
+    wireFeedSpeed: '',
+    speed: '',
+    gasFlow: ''
+  }));
 
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -215,6 +235,9 @@ const VideoAnalysisApp: React.FC = () => {
   } | null>(null);
   const [showDssAnalysisPopup, setShowDssAnalysisPopup] = useState(false);
   
+  // Add new state for material prompt
+  const [showMaterialPrompt, setShowMaterialPrompt] = useState(false);
+
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -1497,10 +1520,25 @@ const handleDeleteROI = (isFirst: boolean) => {
         
         if (matchingJointType) {
           setJointType(matchingJointType.id);
+          
+          // Reset all parameters
+          setWeldParams({
+            material: '',
+            plateThickness: '',
+            wireDiameter: '',
+            current: '',
+            voltage: '',
+            wireFeedSpeed: '',
+            speed: '',
+            gasFlow: ''
+          });
+          
+          // Show material selection prompt
+          setShowMaterialPrompt(true);
         }
       }
       
-      // Show joint identification popup
+      // Show joint identification popup with modified message
       setShowAnalysisPopup(true);
       
       // Auto-hide analysis popup after 5 seconds
@@ -1586,6 +1624,146 @@ const handleDeleteROI = (isFirst: boolean) => {
     } finally {
       setIsRunningDssAnalysis(false);
     }
+  };
+  
+  // Update the parameter suggestions function
+  const updateParameterOptions = (materialType: string, thickness: string) => {
+    const updatedParams: WeldParams = { ...weldParams };
+    const thicknessNum = parseFloat(thickness);
+    
+    // Update the thickness value first
+    updatedParams.plateThickness = thickness;
+    
+    switch (materialType) {
+      case 'Mild Steel':
+        if (thicknessNum <= 2.0) {
+          updatedParams.wireDiameter = '0.8';
+          updatedParams.current = '150';
+          updatedParams.voltage = '21';
+          updatedParams.wireFeedSpeed = '6';
+          updatedParams.speed = '6';
+          updatedParams.gasFlow = '12';
+        } else if (thicknessNum <= 4.0) {
+          updatedParams.wireDiameter = '1.0';
+          updatedParams.current = '200';
+          updatedParams.voltage = '24';
+          updatedParams.wireFeedSpeed = '8';
+          updatedParams.speed = '4';
+          updatedParams.gasFlow = '14';
+        } else {
+          updatedParams.wireDiameter = '1.2';
+          updatedParams.current = '250';
+          updatedParams.voltage = '27';
+          updatedParams.wireFeedSpeed = '10';
+          updatedParams.speed = '3';
+          updatedParams.gasFlow = '16';
+        }
+        break;
+
+      case 'Stainless Steel':
+        if (thicknessNum <= 2.0) {
+          updatedParams.wireDiameter = '0.8';
+          updatedParams.current = '125';
+          updatedParams.voltage = '20';
+          updatedParams.wireFeedSpeed = '5';
+          updatedParams.speed = '5';
+          updatedParams.gasFlow = '14';
+        } else if (thicknessNum <= 4.0) {
+          updatedParams.wireDiameter = '1.0';
+          updatedParams.current = '175';
+          updatedParams.voltage = '23';
+          updatedParams.wireFeedSpeed = '7';
+          updatedParams.speed = '4';
+          updatedParams.gasFlow = '16';
+        } else {
+          updatedParams.wireDiameter = '1.2';
+          updatedParams.current = '225';
+          updatedParams.voltage = '26';
+          updatedParams.wireFeedSpeed = '9';
+          updatedParams.speed = '3';
+          updatedParams.gasFlow = '18';
+        }
+        break;
+
+      case 'Aluminum':
+        if (thicknessNum <= 2.0) {
+          updatedParams.wireDiameter = '1.0';
+          updatedParams.current = '175';
+          updatedParams.voltage = '22';
+          updatedParams.wireFeedSpeed = '8';
+          updatedParams.speed = '8';
+          updatedParams.gasFlow = '16';
+        } else if (thicknessNum <= 4.0) {
+          updatedParams.wireDiameter = '1.2';
+          updatedParams.current = '225';
+          updatedParams.voltage = '25';
+          updatedParams.wireFeedSpeed = '10';
+          updatedParams.speed = '6';
+          updatedParams.gasFlow = '18';
+        } else {
+          updatedParams.wireDiameter = '1.6';
+          updatedParams.current = '275';
+          updatedParams.voltage = '28';
+          updatedParams.wireFeedSpeed = '12';
+          updatedParams.speed = '4';
+          updatedParams.gasFlow = '20';
+        }
+        break;
+
+      case 'Nickel Alloy':
+        if (thicknessNum <= 2.0) {
+          updatedParams.wireDiameter = '0.8';
+          updatedParams.current = '150';
+          updatedParams.voltage = '21';
+          updatedParams.wireFeedSpeed = '6';
+          updatedParams.speed = '6';
+          updatedParams.gasFlow = '14';
+        } else if (thicknessNum <= 4.0) {
+          updatedParams.wireDiameter = '1.0';
+          updatedParams.current = '200';
+          updatedParams.voltage = '24';
+          updatedParams.wireFeedSpeed = '8';
+          updatedParams.speed = '4';
+          updatedParams.gasFlow = '16';
+        } else {
+          updatedParams.wireDiameter = '1.2';
+          updatedParams.current = '250';
+          updatedParams.voltage = '27';
+          updatedParams.wireFeedSpeed = '10';
+          updatedParams.speed = '3';
+          updatedParams.gasFlow = '18';
+        }
+        break;
+    }
+
+    console.log('Updating parameters for:', materialType, thickness);
+    console.log('Updated parameters:', updatedParams);
+    
+    setWeldParams(updatedParams);
+  };
+
+  // Update the handlers
+  const handleMaterialChange = (value: string) => {
+    console.log('Material changed to:', value);
+    const newParams: WeldParams = { ...weldParams, material: value };
+    setWeldParams(newParams);
+    
+    if (newParams.plateThickness) {
+      updateParameterOptions(value, newParams.plateThickness);
+    }
+  };
+
+  const handleThicknessChange = (value: string) => {
+    console.log('Thickness changed to:', value);
+    updateParameterOptions(weldParams.material, value);
+  };
+
+  // Add handler for other parameter changes
+  const handleParameterChange = (paramId: string, value: string) => {
+    setWeldParams(prev => ({
+      ...prev,
+      [paramId]: value
+    }));
   };
   
   return (
@@ -2185,21 +2363,28 @@ const handleDeleteROI = (isFirst: boolean) => {
                   <div className="space-y-2 group">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <label className="text-sm font-medium flex items-center gap-1 cursor-help group-hover:text-primary transition-colors">
+                        <label className={cn(
+                          "text-sm font-medium flex items-center gap-1 cursor-help transition-colors",
+                          !jointType ? "text-muted-foreground" : "group-hover:text-primary"
+                        )}>
                           Material Type
                           <Info className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
                         </label>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Select the base material type</p>
+                        <p>{jointType ? "Select the base material type" : "First detect joint type"}</p>
                       </TooltipContent>
                     </Tooltip>
                     <Select
                       value={weldParams['material']}
-                      onValueChange={(value) => setWeldParams(prev => ({ ...prev, material: value }))}
+                      onValueChange={handleMaterialChange}
+                      disabled={!jointType}
                     >
-                      <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30">
-                        <SelectValue placeholder="Select material" />
+                      <SelectTrigger className={cn(
+                        "hover:bg-accent transition-colors border-border/50 focus:ring-primary/30",
+                        !jointType && "opacity-50"
+                      )}>
+                        <SelectValue placeholder={jointType ? "Select material" : "Detect joint type first"} />
                       </SelectTrigger>
                       <SelectContent>
                         {weldParameters[0].options.map((option) => (
@@ -2219,21 +2404,28 @@ const handleDeleteROI = (isFirst: boolean) => {
                   <div className="space-y-2 group">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <label className="text-sm font-medium flex items-center gap-1 cursor-help group-hover:text-primary transition-colors">
+                        <label className={cn(
+                          "text-sm font-medium flex items-center gap-1 cursor-help transition-colors",
+                          !weldParams.material ? "text-muted-foreground" : "group-hover:text-primary"
+                        )}>
                           Plate Thickness (mm)
                           <Info className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
                         </label>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Select the workpiece thickness</p>
+                        <p>{weldParams.material ? "Select the workpiece thickness" : "First select material type"}</p>
                       </TooltipContent>
                     </Tooltip>
                     <Select
                       value={weldParams['plateThickness']}
-                      onValueChange={(value) => setWeldParams(prev => ({ ...prev, plateThickness: value }))}
+                      onValueChange={handleThicknessChange}
+                      disabled={!weldParams.material}
                     >
-                      <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30">
-                        <SelectValue placeholder="Select thickness" />
+                      <SelectTrigger className={cn(
+                        "hover:bg-accent transition-colors border-border/50 focus:ring-primary/30",
+                        !weldParams.material && "opacity-50"
+                      )}>
+                        <SelectValue placeholder={weldParams.material ? "Select thickness" : "Select material first"} />
                       </SelectTrigger>
                       <SelectContent>
                         {weldParameters[1].options.map((option) => (
@@ -2256,21 +2448,46 @@ const handleDeleteROI = (isFirst: boolean) => {
                     <div key={param.id} className="space-y-2 group">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <label className="text-sm font-medium flex items-center gap-1 cursor-help group-hover:text-primary transition-colors">
+                          <label className={cn(
+                            "text-sm font-medium flex items-center gap-1 cursor-help transition-colors",
+                            (!jointType || !weldParams.material || !weldParams.plateThickness) 
+                              ? "text-muted-foreground" 
+                              : "group-hover:text-primary"
+                          )}>
                             {param.name} {param.unit && `(${param.unit})`}
                             <Info className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
                           </label>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Configure the {param.name.toLowerCase()} for your welding process</p>
+                          <p>
+                            {!jointType 
+                              ? "First detect joint type" 
+                              : !weldParams.material 
+                                ? "Select material type first" 
+                                : !weldParams.plateThickness 
+                                  ? "Select plate thickness first" 
+                                  : `Configure the ${param.name.toLowerCase()} for your welding process`}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                       <Select
                         value={weldParams[param.id]}
-                        onValueChange={(value) => setWeldParams(prev => ({ ...prev, [param.id]: value }))}
+                        onValueChange={(value) => handleParameterChange(param.id, value)}
+                        disabled={!jointType || !weldParams.material || !weldParams.plateThickness}
                       >
-                        <SelectTrigger className="hover:bg-accent transition-colors border-border/50 focus:ring-primary/30">
-                          <SelectValue placeholder={`Select ${param.name}`} />
+                        <SelectTrigger className={cn(
+                          "hover:bg-accent transition-colors border-border/50 focus:ring-primary/30",
+                          (!jointType || !weldParams.material || !weldParams.plateThickness) && "opacity-50"
+                        )}>
+                          <SelectValue placeholder={
+                            !jointType 
+                              ? "Detect joint type first" 
+                              : !weldParams.material 
+                                ? "Select material first" 
+                                : !weldParams.plateThickness 
+                                  ? "Select thickness first" 
+                                  : `Select ${param.name}`
+                          } />
                         </SelectTrigger>
                         <SelectContent>
                           {param.options.map((option) => (
