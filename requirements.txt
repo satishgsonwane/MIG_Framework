@@ -1,6 +1,6 @@
 # Core dependencies
 numpy>=1.21.0
-scipy==1.10.1
+scipy==1.13.1
 matplotlib==3.5.1
 opencv-python>=4.5.0
 statsmodels==0.13.2
@@ -23,7 +23,7 @@ pillow>=9.0.0
 tk>=0.1.0
 
 # Optional MATLAB dependencies
-matlabengine==24.2.2  # Only required if using MATLAB models
+matlabengine==24.1.1  # Only required if using MATLAB models
 
 # Development tools
 flake8>=4.0.0

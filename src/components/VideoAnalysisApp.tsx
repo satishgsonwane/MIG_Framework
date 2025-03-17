@@ -1508,26 +1508,20 @@ const handleDeleteROI = (isFirst: boolean) => {
     }
   };
   
-  // Modify the runDssAnalysis function to use a more reliable check for the image
+  // Update the runDssAnalysis function
   const runDssAnalysis = async () => {
-    // Don't log the error, just check silently
     if (!importedImage2) {
-      return; // Silently return without showing any error
+      setError('No image selected for analysis');
+      return;
     }
-    
-    // Set the running state to show the visual indicator
+
     setIsRunningDssAnalysis(true);
-    setError(''); // Clear any previous errors
-    
-    // Show a temporary notification that analysis is starting
-    console.log('Starting DSS analysis on imported image');
-    
+    setError('');
+
     try {
-      // Save the imported image first
       const imagePath = await saveROIAsImage(importedImage2, 'weld_image.png');
       console.log('Image saved at path:', imagePath);
       
-      // Call the DSS analysis API
       const response = await fetch('/api/run-dss-analysis', {
         method: 'POST',
         headers: {
@@ -1536,85 +1530,50 @@ const handleDeleteROI = (isFirst: boolean) => {
         body: JSON.stringify({ imagePath })
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to run DSS analysis: ${response.status} ${errorText}`);
+        throw new Error(data.error || 'Failed to run DSS analysis');
       }
       
-      const result = await response.json();
-      console.log('DSS analysis result (full):', JSON.stringify(result, null, 2));
-      
-      if (!result.success) {
-        throw new Error(result.error || 'DSS analysis failed');
-      }
-      
-      // Check if result contains an error
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      
-      // Ensure confidence values are valid numbers
-      if (result.result) {
-        // Log the specific defect type and message for debugging
-        console.log('Classification:', result.result.classification);
-        console.log('Defect Type:', result.result.defect_type);
-        console.log('Message:', result.result.message);
+      if (data.success && data.result) {
+        // Set the analysis result
+        setDssAnalysisResult({
+          classification: data.result.classification,
+          confidence: data.result.confidence || 0.85,
+          defect_type: data.result.defect_type,
+          message: data.result.message || (
+            data.result.classification === 'Good Weld' 
+              ? 'The weld is good. No further action required.'
+              : `Caution: Bad Weld. \nThe specific defect type is ${data.result.defect_type}. Please check the weld.`
+          )
+        });
         
-        // Fix NaN confidence values
-        if (typeof result.result.confidence !== 'number' || isNaN(result.result.confidence)) {
-          console.log('Fixing NaN confidence value');
-          result.result.confidence = 0.85; // Default to 85% if not available
-        }
-        
-        if (result.result.defect_confidence && 
-            (typeof result.result.defect_confidence !== 'number' || isNaN(result.result.defect_confidence))) {
-          console.log('Fixing NaN defect_confidence value');
-          result.result.defect_confidence = 0.75; // Default to 75% if not available
-        }
-        
-        // Ensure message is present for display
-        if (!result.result.message) {
-          console.log('No message in result, adding default message');
-          if (result.result.classification === 'Good Weld') {
-            result.result.message = 'The weld is good. No further action required.';
-          } else if (result.result.defect_type) {
-            result.result.message = `Caution: Bad Weld. \nThe specific defect type is ${result.result.defect_type}. Please check the weld.`;
-          }
+        // Show popup for bad welds
+        if (data.result.classification === 'Bad Weld') {
+          setShowDssAnalysisPopup(true);
+          
+          // Auto-hide after 30 seconds
+          setTimeout(() => {
+            setShowDssAnalysisPopup(false);
+          }, 30000);
         }
       } else {
-        // If no result object is present, throw an error
-        throw new Error('No analysis result returned from the server');
+        throw new Error(data.error || 'Analysis failed to return valid results');
       }
       
-      // Set the analysis result
-      setDssAnalysisResult(result.result);
-      console.log('Setting DSS analysis result:', result.result);
-      
-      // Only show the popup for bad welds or errors
-      if (result.result.classification === 'Bad Weld') {
-        setShowDssAnalysisPopup(true);
-        
-        // Auto-hide the popup after 30 seconds (longer than before to give time to read)
-        setTimeout(() => {
-          setShowDssAnalysisPopup(false);
-        }, 30000);
-      }
     } catch (err: any) {
       console.error('Error running DSS analysis:', err);
-      // Show a user-friendly error message
-      setError(`DSS analysis failed: ${err.message}`);
+      setError(`Analysis failed: ${err.message}`);
       
-      // Create a default error result to display
+      // Set a more user-friendly error result
       setDssAnalysisResult({
         classification: 'Error',
         confidence: 0,
-        message: `Analysis failed: ${err.message}\n\nPlease try again with a different image or check the console for more details.`
+        message: `Analysis encountered an error. Please try again or contact support if the issue persists.`
       });
       
-      // Show the error popup
       setShowDssAnalysisPopup(true);
-      
-      // Auto-hide the popup after 10 seconds
       setTimeout(() => {
         setShowDssAnalysisPopup(false);
       }, 10000);
