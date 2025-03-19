@@ -238,6 +238,12 @@ const VideoAnalysisApp: React.FC = () => {
   // Add new state for material prompt
   const [showMaterialPrompt, setShowMaterialPrompt] = useState(false);
 
+  // Add this state for weld database
+  const [weldDatabase, setWeldDatabase] = useState<any>({});
+  
+  // Add state to track if parameters have been changed
+  const [parametersChanged, setParametersChanged] = useState(false);
+
   // Effect for getting cameras
   useEffect(() => {
     const getCameras = async () => {
@@ -249,24 +255,43 @@ const VideoAnalysisApp: React.FC = () => {
         console.log('Available cameras:', videoDevices);
         setCameras(videoDevices);
         
-        if (videoDevices.length > 0 && videoDevices[0].deviceId) {
+        // If available, select the first camera for each feed
+        if (videoDevices.length > 0) {
           setSelectedCamera1(videoDevices[0].deviceId);
-        }
-        if (videoDevices.length > 1 && videoDevices[1].deviceId) {
-          setSelectedCamera2(videoDevices[1].deviceId);
+          if (videoDevices.length > 1) {
+            setSelectedCamera2(videoDevices[1].deviceId);
+          } else {
+            setSelectedCamera2(videoDevices[0].deviceId);
+          }
         }
       } catch (err) {
-        console.error('Error getting cameras:', err);
-        setError('Failed to get camera devices. Please check permissions.');
+        console.error('Error accessing cameras:', err);
+        setError('Camera access denied. Please enable camera permissions.');
       }
     };
-
+    
     getCameras();
-    navigator.mediaDevices.addEventListener('devicechange', getCameras);
-    return () => {
-      navigator.mediaDevices.removeEventListener('devicechange', getCameras);
-    };
+    
+    // Also load the weld parameters database
+    loadWeldDatabase();
   }, []);
+  
+  // Add this function to load the weld parameters database
+  const loadWeldDatabase = async () => {
+    try {
+      const response = await fetch('/api/get-weld-database');
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('Loaded weld database:', result.data);
+        setWeldDatabase(result.data);
+      } else {
+        console.error('Failed to load weld database:', result.error);
+      }
+    } catch (err) {
+      console.error('Error loading weld database:', err);
+    }
+  };
 
   // Effect to cache imported images
   useEffect(() => {
@@ -1634,6 +1659,28 @@ const handleDeleteROI = (isFirst: boolean) => {
     // Update the thickness value first
     updatedParams.plateThickness = thickness;
     
+    // First check if we have parameters in our database
+    if (weldDatabase[materialType] && weldDatabase[materialType][thickness]) {
+      console.log('Using parameters from database for', materialType, thickness);
+      const dbParams = weldDatabase[materialType][thickness];
+      
+      // Apply parameters from database
+      updatedParams.wireDiameter = dbParams.wireDiameter;
+      updatedParams.current = dbParams.current;
+      updatedParams.voltage = dbParams.voltage;
+      updatedParams.wireFeedSpeed = dbParams.wireFeedSpeed;
+      updatedParams.speed = dbParams.speed;
+      updatedParams.gasFlow = dbParams.gasFlow;
+      
+      setWeldParams(updatedParams);
+      // Reset the parameters changed flag when loading from database
+      setParametersChanged(false);
+      return;
+    }
+    
+    // If not in database, use default parameter logic based on material and thickness
+    console.log('Using default parameters for', materialType, thickness);
+    
     switch (materialType) {
       case 'Mild Steel':
         if (thicknessNum <= 2.0) {
@@ -1748,22 +1795,57 @@ const handleDeleteROI = (isFirst: boolean) => {
     const newParams: WeldParams = { ...weldParams, material: value };
     setWeldParams(newParams);
     
-    if (newParams.plateThickness) {
-      updateParameterOptions(value, newParams.plateThickness);
+    // Reset parameters changed flag when material changes
+    setParametersChanged(false);
+    
+    // Clear thickness and other parameters if material changes
+    if (value !== weldParams.material) {
+      newParams.plateThickness = '';
+      newParams.wireDiameter = '';
+      newParams.current = '';
+      newParams.voltage = '';
+      newParams.wireFeedSpeed = '';
+      newParams.speed = '';
+      newParams.gasFlow = '';
+      setWeldParams(newParams);
     }
   };
-
+  
   const handleThicknessChange = (value: string) => {
     console.log('Thickness changed to:', value);
-    updateParameterOptions(weldParams.material, value);
+    const newParams = { ...weldParams, plateThickness: value };
+    setWeldParams(newParams);
+    
+    // Reset parameters changed flag when thickness changes
+    setParametersChanged(false);
+    
+    // Update other parameters based on material and thickness
+    if (weldParams.material && value) {
+      updateParameterOptions(weldParams.material, value);
+    }
   };
 
   // Add handler for other parameter changes
   const handleParameterChange = (paramId: string, value: string) => {
-    setWeldParams(prev => ({
-      ...prev,
-      [paramId]: value
-    }));
+    console.log('Parameter changed:', paramId, value);
+    const newParams = { ...weldParams, [paramId]: value };
+    setWeldParams(newParams);
+    
+    // Check if this is a meaningful change (not just material or thickness)
+    if (paramId !== 'material' && paramId !== 'plateThickness') {
+      // Check if we have parameters in the database to compare against
+      if (weldDatabase[newParams.material] && 
+          weldDatabase[newParams.material][newParams.plateThickness]) {
+        const dbParams = weldDatabase[newParams.material][newParams.plateThickness];
+        // Only set parameters changed if the value is different from the database
+        if (dbParams[paramId] !== value) {
+          setParametersChanged(true);
+        }
+      } else {
+        // No database entry to compare against, so consider it changed
+        setParametersChanged(true);
+      }
+    }
   };
   
   return (
@@ -2504,6 +2586,63 @@ const handleDeleteROI = (isFirst: boolean) => {
                     </div>
                   ))}
                 </div>
+                {parametersChanged && (
+                  <div className="mt-4">
+                    <Button
+                      onClick={async () => {
+                        // Check if necessary parameters are set
+                        if (!weldParams.material || !weldParams.plateThickness) {
+                          setError('Material and plate thickness must be set before updating the database');
+                          return;
+                        }
+                        
+                        try {
+                          // Map weldParams to the format expected by the API
+                          const paramData = {
+                            material: weldParams.material,
+                            plateThickness: weldParams.plateThickness,
+                            wireDiameter: weldParams.wireDiameter,
+                            current: weldParams.current,
+                            voltage: weldParams.voltage,
+                            wireFeedSpeed: weldParams.wireFeedSpeed,
+                            speed: weldParams.speed,
+                            gasFlow: weldParams.gasFlow
+                          };
+                          
+                          // Call the API to update the database
+                          const response = await fetch('/api/update-weld-database', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(paramData)
+                          });
+                          
+                          const result = await response.json();
+                          
+                          if (result.success) {
+                            console.log('Database updated successfully:', result.message);
+                            // Show success message
+                            alert('Weld parameters database updated successfully');
+                            // Reload the database
+                            loadWeldDatabase();
+                            // Reset the parameters changed flag so the button disappears
+                            setParametersChanged(false);
+                          } else {
+                            throw new Error(result.error || 'Failed to update database');
+                          }
+                        } catch (err: any) {
+                          console.error('Error updating database:', err);
+                          setError(`Failed to update database: ${err.message}`);
+                        }
+                      }}
+                      className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                      disabled={!weldParams.material || !weldParams.plateThickness}
+                    >
+                      Update Database
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -1,0 +1,298 @@
+{
+  "Mild Steel": {
+    "1.0": {
+      "wireDiameter": "1.0",
+      "current": "150",
+      "voltage": "21",
+      "wireFeedSpeed": "6",
+      "speed": "6",
+      "gasFlow": "12"
+    },
+    "1.5": {
+      "wireDiameter": "0.8",
+      "current": "150",
+      "voltage": "21",
+      "wireFeedSpeed": "6",
+      "speed": "6",
+      "gasFlow": "12"
+    },
+    "2.0": {
+      "wireDiameter": "0.8",
+      "current": "150",
+      "voltage": "21",
+      "wireFeedSpeed": "6",
+      "speed": "6",
+      "gasFlow": "12"
+    },
+    "2.5": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "14"
+    },
+    "3.0": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "14"
+    },
+    "3.5": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "14"
+    },
+    "4.0": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "14"
+    },
+    "4.5": {
+      "wireDiameter": "1.2",
+      "current": "250",
+      "voltage": "27",
+      "wireFeedSpeed": "10",
+      "speed": "3",
+      "gasFlow": "16"
+    },
+    "5.0": {
+      "wireDiameter": "1.2",
+      "current": "250",
+      "voltage": "27",
+      "wireFeedSpeed": "10",
+      "speed": "3",
+      "gasFlow": "16"
+    }
+  },
+  "Stainless Steel": {
+    "1.0": {
+      "wireDiameter": "0.8",
+      "current": "125",
+      "voltage": "20",
+      "wireFeedSpeed": "5",
+      "speed": "5",
+      "gasFlow": "14"
+    },
+    "1.5": {
+      "wireDiameter": "0.8",
+      "current": "125",
+      "voltage": "20",
+      "wireFeedSpeed": "5",
+      "speed": "5",
+      "gasFlow": "14"
+    },
+    "2.0": {
+      "wireDiameter": "0.8",
+      "current": "125",
+      "voltage": "20",
+      "wireFeedSpeed": "5",
+      "speed": "5",
+      "gasFlow": "14"
+    },
+    "2.5": {
+      "wireDiameter": "1.0",
+      "current": "175",
+      "voltage": "23",
+      "wireFeedSpeed": "7",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "3.0": {
+      "wireDiameter": "1.0",
+      "current": "175",
+      "voltage": "23",
+      "wireFeedSpeed": "7",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "3.5": {
+      "wireDiameter": "1.0",
+      "current": "175",
+      "voltage": "23",
+      "wireFeedSpeed": "7",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "4.0": {
+      "wireDiameter": "1.0",
+      "current": "175",
+      "voltage": "23",
+      "wireFeedSpeed": "7",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "4.5": {
+      "wireDiameter": "1.2",
+      "current": "225",
+      "voltage": "26",
+      "wireFeedSpeed": "9",
+      "speed": "3",
+      "gasFlow": "18"
+    },
+    "5.0": {
+      "wireDiameter": "1.2",
+      "current": "225",
+      "voltage": "26",
+      "wireFeedSpeed": "9",
+      "speed": "3",
+      "gasFlow": "18"
+    }
+  },
+  "Aluminum": {
+    "1.0": {
+      "wireDiameter": "1.0",
+      "current": "175",
+      "voltage": "22",
+      "wireFeedSpeed": "8",
+      "speed": "8",
+      "gasFlow": "16"
+    },
+    "1.5": {
+      "wireDiameter": "1.0",
+      "current": "175",
+      "voltage": "22",
+      "wireFeedSpeed": "8",
+      "speed": "8",
+      "gasFlow": "16"
+    },
+    "2.0": {
+      "wireDiameter": "1.0",
+      "current": "175",
+      "voltage": "22",
+      "wireFeedSpeed": "8",
+      "speed": "8",
+      "gasFlow": "16"
+    },
+    "2.5": {
+      "wireDiameter": "1.2",
+      "current": "225",
+      "voltage": "25",
+      "wireFeedSpeed": "10",
+      "speed": "6",
+      "gasFlow": "18"
+    },
+    "3.0": {
+      "wireDiameter": "1.2",
+      "current": "225",
+      "voltage": "25",
+      "wireFeedSpeed": "10",
+      "speed": "6",
+      "gasFlow": "18"
+    },
+    "3.5": {
+      "wireDiameter": "1.2",
+      "current": "225",
+      "voltage": "25",
+      "wireFeedSpeed": "10",
+      "speed": "6",
+      "gasFlow": "18"
+    },
+    "4.0": {
+      "wireDiameter": "1.2",
+      "current": "225",
+      "voltage": "25",
+      "wireFeedSpeed": "10",
+      "speed": "6",
+      "gasFlow": "18"
+    },
+    "4.5": {
+      "wireDiameter": "1.6",
+      "current": "275",
+      "voltage": "28",
+      "wireFeedSpeed": "12",
+      "speed": "4",
+      "gasFlow": "20"
+    },
+    "5.0": {
+      "wireDiameter": "1.6",
+      "current": "275",
+      "voltage": "28",
+      "wireFeedSpeed": "12",
+      "speed": "4",
+      "gasFlow": "20"
+    }
+  },
+  "Nickel Alloy": {
+    "1.0": {
+      "wireDiameter": "0.8",
+      "current": "150",
+      "voltage": "21",
+      "wireFeedSpeed": "6",
+      "speed": "6",
+      "gasFlow": "14"
+    },
+    "1.5": {
+      "wireDiameter": "0.8",
+      "current": "150",
+      "voltage": "21",
+      "wireFeedSpeed": "6",
+      "speed": "6",
+      "gasFlow": "14"
+    },
+    "2.0": {
+      "wireDiameter": "0.8",
+      "current": "150",
+      "voltage": "21",
+      "wireFeedSpeed": "6",
+      "speed": "6",
+      "gasFlow": "14"
+    },
+    "2.5": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "3.0": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "3.5": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "4.0": {
+      "wireDiameter": "1.0",
+      "current": "200",
+      "voltage": "24",
+      "wireFeedSpeed": "8",
+      "speed": "4",
+      "gasFlow": "16"
+    },
+    "4.5": {
+      "wireDiameter": "1.2",
+      "current": "250",
+      "voltage": "27",
+      "wireFeedSpeed": "10",
+      "speed": "3",
+      "gasFlow": "18"
+    },
+    "5.0": {
+      "wireDiameter": "1.2",
+      "current": "250",
+      "voltage": "27",
+      "wireFeedSpeed": "10",
+      "speed": "3",
+      "gasFlow": "18"
+    }
+  }
+}
