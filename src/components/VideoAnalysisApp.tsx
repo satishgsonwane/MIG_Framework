@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
-import { Square, Play, Pause, Trash2, Info, HelpCircle, Upload, Image, Maximize2, LineChart, X } from 'lucide-react';
+import { Square, Play, Pause, Trash2, Info, HelpCircle, Upload, Image, Maximize2, LineChart, X, Save, Database, Sliders, Layers, FileText, Shield, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Tooltip, 
@@ -1892,21 +1892,21 @@ const handleDeleteROI = (isFirst: boolean) => {
         
         {/* Page Header */}
         <div className="space-y-2 mb-8">
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">Weld Analysis Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-800">Weld Analysis Dashboard</h1>
           <p className="text-muted-foreground max-w-3xl">
             Real-time monitoring and analysis of welding processes using dual camera feeds with advanced edge detection.
           </p>
-          <div className="h-1.5 w-40 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full mt-2"></div>
+          <div className="h-1 w-40 bg-gray-300 rounded-full mt-2"></div>
         </div>
 
         {/* Top Row - Camera Feeds */}
         <div className="grid grid-cols-2 gap-8">
           {/* First Video Feed */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-blue-950/5">
-            <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-blue-900/10">
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-white">
+            <CardHeader className="p-4 pb-2 bg-gray-50">
               <CardTitle className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <span className="font-semibold text-lg text-blue-600">Depth Camera Feed</span>
+                  <span className="font-semibold text-lg text-gray-700">Depth Camera Feed</span>
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
@@ -2069,12 +2069,12 @@ const handleDeleteROI = (isFirst: boolean) => {
                   </div>
                 )}
                 {!isStreaming && !importedImage1 && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm">
-                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                      <Play className="h-8 w-8 text-blue-500" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 backdrop-blur-sm">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                      <Play className="h-8 w-8 text-gray-500" />
                     </div>
-                    <p className="text-sm font-medium text-blue-700">Click play to start camera</p>
-                    <p className="text-xs text-blue-500 mt-1">or import an image for analysis</p>
+                    <p className="text-sm font-medium text-gray-700">Click play to start camera</p>
+                    <p className="text-xs text-gray-500 mt-1">or import an image for analysis</p>
                   </div>
                 )}
               </div>
@@ -2082,11 +2082,11 @@ const handleDeleteROI = (isFirst: boolean) => {
           </Card>
     
           {/* Second Video Feed */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-indigo-950/5">
-            <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-indigo-900/10">
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-white">
+            <CardHeader className="p-4 pb-2 bg-gray-50">
               <CardTitle className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <span className="font-semibold text-lg text-indigo-600">Weld Camera Feed</span>
+                  <span className="font-semibold text-lg text-gray-700">Weld Camera Feed</span>
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
@@ -2249,12 +2249,12 @@ const handleDeleteROI = (isFirst: boolean) => {
                   </div>
                 )}
                 {!isStream2Active && !importedImage2 && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50/80 to-purple-50/80 backdrop-blur-sm">
-                    <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-3">
-                      <Play className="h-8 w-8 text-indigo-500" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 backdrop-blur-sm">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                      <Play className="h-8 w-8 text-gray-500" />
                     </div>
-                    <p className="text-sm font-medium text-indigo-700">Click play to start camera</p>
-                    <p className="text-xs text-indigo-500 mt-1">the feed is processed at 20 Hz</p>
+                    <p className="text-sm font-medium text-gray-700">Click play to start camera</p>
+                    <p className="text-xs text-gray-500 mt-1">the feed is processed at 20 Hz</p>
                   </div>
                 )}
               </div>
@@ -2267,10 +2267,15 @@ const handleDeleteROI = (isFirst: boolean) => {
           {/* Left Column - ROI Analysis */}
           <div className="col-span-4 space-y-6">
             {/* ROI Analysis */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-purple-950/5">
-              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-purple-900/10">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-white">
+              <CardHeader className="p-4 pb-2 bg-gray-50">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold text-purple-600">ROI Analysis</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-gray-700">
+                    <div className="flex items-center gap-1.5">
+                      <Layers className="h-5 w-5 text-gray-600" />
+                      ROI Analysis
+                    </div>
+                  </CardTitle>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
@@ -2292,18 +2297,18 @@ const handleDeleteROI = (isFirst: boolean) => {
                       className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                     />
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50/50">
-                      <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                        <Square className="h-6 w-6 text-purple-400" />
+                    <div className="h-full flex flex-col items-center justify-center p-4 bg-gray-50">
+                      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                        <Square className="h-6 w-6 text-gray-400" />
                       </div>
-                      <span className="text-sm text-purple-700 text-center">No ROI selected</span>
-                      <span className="text-xs text-purple-500 mt-1 text-center">Use the square tool to select a region</span>
+                      <span className="text-sm text-gray-700 text-center">No ROI selected</span>
+                      <span className="text-xs text-gray-500 mt-1 text-center">Use the square tool to select a region</span>
                     </div>
                   )}
                 </div>
                 <div className="mt-4 flex flex-col gap-2">
                   <Button 
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg" 
+                    className="w-full bg-gray-800 hover:bg-gray-900 transition-all duration-300 shadow-md hover:shadow-lg"
                     onClick={handleAnalyze}
                     disabled={isAnalyzing || (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image)}
                   >
@@ -2313,11 +2318,14 @@ const handleDeleteROI = (isFirst: boolean) => {
                         Analyzing...
                       </>
                     ) : (
-                      'Analyse'
+                      <>
+                        <Sliders className="mr-2 h-4 w-4" />
+                        Analyse
+                      </>
                     )}
                   </Button>
                   <Button 
-                    className="w-full transition-all duration-300 border-red-300 hover:border-red-400 hover:bg-red-50/30 text-red-700" 
+                    className="w-full transition-all duration-300 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700" 
                     onClick={runEdgeDetection}
                     disabled={isRunningEdgeDetection || (!roiAnalysis.roi1Image && !roiAnalysis.roi2Image)}
                     variant="outline"
@@ -2343,13 +2351,14 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
 
             {/* Joint Configuration */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-green-950/5">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-white">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-full mr-2"></div>
-                      <span className="text-green-700">Joint Configuration</span>
+                      <div className="w-1 h-6 bg-gray-400 rounded-full mr-2"></div>
+                      <Settings className="h-5 w-5 text-gray-600 mr-1.5" />
+                      <span className="text-gray-700">Joint Configuration</span>
                     </div>
                   </CardTitle>
                   <HoverCard>
@@ -2413,13 +2422,14 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
 
             {/* Weld Parameters */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-amber-950/5">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-white">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full mr-2"></div>
-                      <span className="text-amber-700">Weld Parameters</span>
+                      <div className="w-1 h-6 bg-gray-400 rounded-full mr-2"></div>
+                      <Sliders className="h-5 w-5 text-gray-600 mr-1.5" />
+                      <span className="text-gray-700">Weld Parameters</span>
                     </div>
                   </CardTitle>
                   <HoverCard>
@@ -2588,59 +2598,67 @@ const handleDeleteROI = (isFirst: boolean) => {
                 </div>
                 {parametersChanged && (
                   <div className="mt-4">
-                    <Button
-                      onClick={async () => {
-                        // Check if necessary parameters are set
-                        if (!weldParams.material || !weldParams.plateThickness) {
-                          setError('Material and plate thickness must be set before updating the database');
-                          return;
-                        }
-                        
-                        try {
-                          // Map weldParams to the format expected by the API
-                          const paramData = {
-                            material: weldParams.material,
-                            plateThickness: weldParams.plateThickness,
-                            wireDiameter: weldParams.wireDiameter,
-                            current: weldParams.current,
-                            voltage: weldParams.voltage,
-                            wireFeedSpeed: weldParams.wireFeedSpeed,
-                            speed: weldParams.speed,
-                            gasFlow: weldParams.gasFlow
-                          };
-                          
-                          // Call the API to update the database
-                          const response = await fetch('/api/update-weld-database', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(paramData)
-                          });
-                          
-                          const result = await response.json();
-                          
-                          if (result.success) {
-                            console.log('Database updated successfully:', result.message);
-                            // Show success message
-                            alert('Weld parameters database updated successfully');
-                            // Reload the database
-                            loadWeldDatabase();
-                            // Reset the parameters changed flag so the button disappears
-                            setParametersChanged(false);
-                          } else {
-                            throw new Error(result.error || 'Failed to update database');
-                          }
-                        } catch (err: any) {
-                          console.error('Error updating database:', err);
-                          setError(`Failed to update database: ${err.message}`);
-                        }
-                      }}
-                      className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 transition-all duration-300 shadow-md hover:shadow-lg"
-                      disabled={!weldParams.material || !weldParams.plateThickness}
-                    >
-                      Update Database
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={async () => {
+                            // Check if necessary parameters are set
+                            if (!weldParams.material || !weldParams.plateThickness) {
+                              setError('Material and plate thickness must be set before updating the database');
+                              return;
+                            }
+                            
+                            try {
+                              // Map weldParams to the format expected by the API
+                              const paramData = {
+                                material: weldParams.material,
+                                plateThickness: weldParams.plateThickness,
+                                wireDiameter: weldParams.wireDiameter,
+                                current: weldParams.current,
+                                voltage: weldParams.voltage,
+                                wireFeedSpeed: weldParams.wireFeedSpeed,
+                                speed: weldParams.speed,
+                                gasFlow: weldParams.gasFlow
+                              };
+                              
+                              // Call the API to update the database
+                              const response = await fetch('/api/update-weld-database', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(paramData)
+                              });
+                              
+                              const result = await response.json();
+                              
+                              if (result.success) {
+                                console.log('Database updated successfully:', result.message);
+                                // Show success message
+                                alert('Weld parameters database updated successfully');
+                                // Reload the database
+                                loadWeldDatabase();
+                                // Reset the parameters changed flag so the button disappears
+                                setParametersChanged(false);
+                              } else {
+                                throw new Error(result.error || 'Failed to update database');
+                              }
+                            } catch (err: any) {
+                              console.error('Error updating database:', err);
+                              setError(`Failed to update database: ${err.message}`);
+                            }
+                          }}
+                          className="w-full bg-gray-700 hover:bg-gray-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                          disabled={!weldParams.material || !weldParams.plateThickness}
+                        >
+                          <Database className="mr-2 h-4 w-4" />
+                          Update Database
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Save current weld parameters to the database</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
               </CardContent>
@@ -2650,13 +2668,14 @@ const handleDeleteROI = (isFirst: boolean) => {
           {/* Right Column - Analysis Visualizations */}
           <div className="col-span-8 grid grid-cols-2 gap-8">
             {/* Edge Detection */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-red-950/5">
-              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-red-900/10">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-white">
+              <CardHeader className="p-4 pb-2 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-gradient-to-b from-red-500 to-rose-600 rounded-full mr-2"></div>
-                      <span className="text-red-600">Edge Detection</span>
+                      <div className="w-1 h-6 bg-gray-400 rounded-full mr-2"></div>
+                      <LineChart className="h-5 w-5 text-gray-600 mr-1.5" />
+                      <span className="text-gray-700">Edge Detection</span>
                     </div>
                   </CardTitle>
                   <Tooltip>
@@ -2674,14 +2693,14 @@ const handleDeleteROI = (isFirst: boolean) => {
               <CardContent className="p-4">
                 <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner relative">
                   {isRunningEdgeDetection ? (
-                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-rose-50/50">
+                    <div className="h-full flex flex-col items-center justify-center bg-gray-50">
                       <div className="relative w-16 h-16 mb-3">
-                        <div className="absolute inset-0 rounded-full border-4 border-red-200 border-t-red-500 animate-spin"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-gray-200 border-t-gray-500 animate-spin"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xs font-medium text-red-600">Processing</span>
+                          <span className="text-xs font-medium text-gray-600">Processing</span>
                         </div>
                       </div>
-                      <span className="text-sm text-red-700 animate-pulse">Detecting edges in selected ROI...</span>
+                      <span className="text-sm text-gray-700 animate-pulse">Detecting edges in selected ROI...</span>
                     </div>
                   ) : edgeDetectionResult ? (
                     <div className="relative h-full flex items-center justify-center group">
@@ -2707,12 +2726,12 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-rose-50/50">
-                      <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-2">
-                        <HelpCircle className="h-8 w-8 text-red-300" />
+                    <div className="h-full flex flex-col items-center justify-center bg-gray-50">
+                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                        <HelpCircle className="h-8 w-8 text-gray-300" />
                       </div>
-                      <span className="text-sm text-red-700">No edge detection results</span>
-                      <span className="text-xs text-red-500 mt-1">Select an ROI and click Edge & LOWESS Analysis</span>
+                      <span className="text-sm text-gray-700">No edge detection results</span>
+                      <span className="text-xs text-gray-500 mt-1">Select an ROI and click Edge & LOWESS Analysis</span>
                     </div>
                   )}
                 </div>
@@ -2727,13 +2746,14 @@ const handleDeleteROI = (isFirst: boolean) => {
             </Card>
 
             {/* LOWESS Visualization */}
-            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-gradient-to-b from-background to-purple-950/5">
-              <CardHeader className="p-4 pb-2 bg-gradient-to-r from-background to-purple-900/10">
+            <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-border/50 overflow-hidden bg-white">
+              <CardHeader className="p-4 pb-2 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold">
                     <div className="flex items-center">
-                      <div className="w-1 h-6 bg-gradient-to-b from-purple-500 to-violet-600 rounded-full mr-2"></div>
-                      <span className="text-purple-600">LOWESS Analysis</span>
+                      <div className="w-1 h-6 bg-gray-400 rounded-full mr-2"></div>
+                      <FileText className="h-5 w-5 text-gray-600 mr-1.5" />
+                      <span className="text-gray-700">LOWESS Analysis</span>
                     </div>
                   </CardTitle>
                   <Tooltip>
@@ -2751,14 +2771,14 @@ const handleDeleteROI = (isFirst: boolean) => {
               <CardContent className="p-4">
                 <div className="aspect-video bg-muted rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden shadow-inner relative">
                   {isRunningEdgeDetection ? (
-                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-violet-50/50">
+                    <div className="h-full flex flex-col items-center justify-center bg-gray-50">
                       <div className="relative w-16 h-16 mb-3">
-                        <div className="absolute inset-0 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-gray-200 border-t-gray-500 animate-spin"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xs font-medium text-purple-600">Processing</span>
+                          <span className="text-xs font-medium text-gray-600">Processing</span>
                         </div>
                       </div>
-                      <span className="text-sm text-purple-700 animate-pulse">Running LOWESS analysis...</span>
+                      <span className="text-sm text-gray-700 animate-pulse">Running LOWESS analysis...</span>
                     </div>
                   ) : lowessResult ? (
                     <div className="relative h-full flex items-center justify-center group">
@@ -2784,12 +2804,12 @@ const handleDeleteROI = (isFirst: boolean) => {
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-violet-50/50">
-                      <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                        <HelpCircle className="h-8 w-8 text-purple-300" />
+                    <div className="h-full flex flex-col items-center justify-center bg-gray-50">
+                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                        <HelpCircle className="h-8 w-8 text-gray-300" />
                       </div>
-                      <span className="text-sm text-purple-700">No LOWESS analysis results</span>
-                      <span className="text-xs text-purple-500 mt-1">Click "Edge & LOWESS Analysis" to process</span>
+                      <span className="text-sm text-gray-700">No LOWESS analysis results</span>
+                      <span className="text-xs text-gray-500 mt-1">Select an ROI and run Edge & LOWESS Analysis</span>
                     </div>
                   )}
                 </div>

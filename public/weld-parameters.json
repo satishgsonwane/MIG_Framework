@@ -2,7 +2,7 @@
   "Mild Steel": {
     "1.0": {
       "wireDiameter": "1.0",
-      "current": "150",
+      "current": "50",
       "voltage": "21",
       "wireFeedSpeed": "6",
       "speed": "6",
